@@ -288,6 +288,9 @@ int dsi_core_clk_stop(struct dsi_core_clks *c_clks)
 static int dsi_link_clk_set_rate(struct dsi_link_clks *l_clks, struct dsi_clk_mngr *mngr)
 {
 	int rc = 0;
+	struct dsi_clk_mngr *mngr;
+
+	mngr = container_of(l_clks, struct dsi_clk_mngr, link_clks[0]);
 
 	if (mngr->is_cont_splash_enabled)
 		return 0;

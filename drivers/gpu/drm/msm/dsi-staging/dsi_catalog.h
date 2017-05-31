@@ -221,4 +221,7 @@ void dsi_ctrl_hw_kickoff_non_embedded_mode(struct dsi_ctrl_hw *ctrl,
 /* Definitions specific to 2.2 DSI controller hardware */
 bool dsi_ctrl_hw_22_get_cont_splash_status(struct dsi_ctrl_hw *ctrl);
 
+/* Definitions specific to 2.2 DSI controller hardware */
+bool dsi_ctrl_hw_22_get_cont_splash_status(struct dsi_ctrl_hw *ctrl);
+
 #endif /* _DSI_CATALOG_H_ */
