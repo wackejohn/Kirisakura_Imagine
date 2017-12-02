@@ -285,13 +285,17 @@ int dsi_core_clk_stop(struct dsi_core_clks *c_clks)
 	return rc;
 }
 
-static int dsi_link_clk_set_rate(struct dsi_link_clks *l_clks, struct dsi_clk_mngr *mngr)
+static int dsi_link_clk_set_rate(struct dsi_link_clks *l_clks, struct dsi_clk_mngr *mngr,  int index)
 {
 	int rc = 0;
 	struct dsi_clk_mngr *mngr;
 
-	mngr = container_of(l_clks, struct dsi_clk_mngr, link_clks[0]);
+	if (index >= MAX_DSI_CTRL) {
+		pr_err("Invalid DSI ctrl index\n");
+		return -EINVAL;
+	}
 
+	mngr = container_of(l_clks, struct dsi_clk_mngr, link_clks[index]);
 	if (mngr->is_cont_splash_enabled)
 		return 0;
 	/*
@@ -443,11 +447,16 @@ static void dsi_link_clk_disable(struct dsi_link_clks *l_clks)
 /**
  * dsi_link_clk_start() - enable dsi link clocks
  */
-int dsi_link_clk_start(struct dsi_link_clks *clks, struct dsi_clk_mngr *mngr)
+int dsi_link_clk_start(struct dsi_link_clks *clks, struct dsi_clk_mngr *mngr, int index)
 {
 	int rc = 0;
 
-	rc = dsi_link_clk_set_rate(clks, mngr);
+	if (index >= MAX_DSI_CTRL) {
+		pr_err("Invalid DSI ctrl index\n");
+		return -EINVAL;
+	}
+
+	rc = dsi_link_clk_set_rate(clks, mngr, index);
 	if (rc) {
 		pr_err("failed to set clk rates, rc = %d\n", rc);
 		goto error;
@@ -563,7 +572,7 @@ static int dsi_display_link_clk_enable(struct dsi_link_clks *clks,
 	m_clks = &clks[master_ndx];
 	mngr = container_of(clks, struct dsi_clk_mngr, link_clks[0]);
 
-	rc = dsi_link_clk_start(m_clks, mngr);
+	rc = dsi_link_clk_start(m_clks, mngr, master_ndx);
 	if (rc) {
 		pr_err("failed to turn on master clocks, rc=%d\n", rc);
 		goto error;
@@ -575,7 +584,7 @@ static int dsi_display_link_clk_enable(struct dsi_link_clks *clks,
 		if (!clk || (clk == m_clks))
 			continue;
 
-		rc = dsi_link_clk_start(clk, mngr);
+		rc = dsi_link_clk_start(clk, mngr, i);
 		if (rc) {
 			pr_err("failed to turn on clocks, rc=%d\n", rc);
 			goto error_disable_master;
