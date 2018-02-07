@@ -841,6 +841,9 @@ int32_t cam_sensor_driver_cmd(struct cam_sensor_ctrl_t *s_ctrl,
 		}
 
 		s_ctrl->sensor_state = CAM_SENSOR_ACQUIRE;
+		CAM_INFO(CAM_SENSOR,
+			"CAM_ACQUIRE_DEV Success, sensor_id:0x%x",
+			s_ctrl->sensordata->slave_info.sensor_id);
 	}
 		break;
 	case CAM_RELEASE_DEV: {
@@ -879,6 +882,10 @@ int32_t cam_sensor_driver_cmd(struct cam_sensor_ctrl_t *s_ctrl,
 		s_ctrl->bridge_intf.session_hdl = -1;
 
 		s_ctrl->sensor_state = CAM_SENSOR_INIT;
+		CAM_INFO(CAM_SENSOR,
+			"CAM_RELEASE_DEV Success, sensor_id:0x%x",
+			s_ctrl->sensordata->slave_info.sensor_id);
+
 		s_ctrl->streamon_count = 0;
 		s_ctrl->streamoff_count = 0;
 	}
@@ -917,6 +924,9 @@ int32_t cam_sensor_driver_cmd(struct cam_sensor_ctrl_t *s_ctrl,
 			}
 		}
 		s_ctrl->sensor_state = CAM_SENSOR_START;
+		CAM_INFO(CAM_SENSOR,
+			"CAM_START_DEV Success, sensor_id:0x%x",
+			s_ctrl->sensordata->slave_info.sensor_id);
 	}
 		break;
 	case CAM_STOP_DEV: {
@@ -941,6 +951,9 @@ int32_t cam_sensor_driver_cmd(struct cam_sensor_ctrl_t *s_ctrl,
 
 		cam_sensor_release_resource(s_ctrl);
 		s_ctrl->sensor_state = CAM_SENSOR_ACQUIRE;
+		CAM_INFO(CAM_SENSOR,
+			"CAM_STOP_DEV Success, sensor_id:0x%x",
+			s_ctrl->sensordata->slave_info.sensor_id);
 	}
 		break;
 	case CAM_CONFIG_DEV: {
