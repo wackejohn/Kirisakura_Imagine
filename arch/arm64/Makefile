@@ -68,7 +68,7 @@ endif
 KBUILD_CFLAGS	+= $(vdso32)
 
 ifeq ($(cc-name),clang)
-KBUILD_CFLAGS	+= -mno-implicit-float
+KBUILD_CFLAGS	+= $(call clang-ifversion, -ge, 0600, -mgeneral-regs-only, -mno-implicit-float)
 else
 KBUILD_CFLAGS	+= -mgeneral-regs-only
 endif
