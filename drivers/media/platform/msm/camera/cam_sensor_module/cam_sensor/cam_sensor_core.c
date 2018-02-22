@@ -885,7 +885,6 @@ int32_t cam_sensor_driver_cmd(struct cam_sensor_ctrl_t *s_ctrl,
 		CAM_INFO(CAM_SENSOR,
 			"CAM_RELEASE_DEV Success, sensor_id:0x%x",
 			s_ctrl->sensordata->slave_info.sensor_id);
-
 		s_ctrl->streamon_count = 0;
 		s_ctrl->streamoff_count = 0;
 	}
