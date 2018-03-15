@@ -693,6 +693,7 @@ static int cam_ois_fw_download(struct cam_ois_ctrl_t *o_ctrl)
 	i2c_reg_setting.addr_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
 	i2c_reg_setting.data_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
 	i2c_reg_setting.size = total_bytes;
+	i2c_reg_setting.delay = 0;
 	i2c_reg_setting.reg_setting = (struct cam_sensor_i2c_reg_array *)
 		kzalloc(sizeof(struct cam_sensor_i2c_reg_array) * total_bytes,
 		GFP_KERNEL);
@@ -730,6 +731,7 @@ static int cam_ois_fw_download(struct cam_ois_ctrl_t *o_ctrl)
 	i2c_reg_setting.addr_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
 	i2c_reg_setting.data_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
 	i2c_reg_setting.size = total_bytes;
+	i2c_reg_setting.delay = 0;
 	i2c_reg_setting.reg_setting = (struct cam_sensor_i2c_reg_array *)
 		kzalloc(sizeof(struct cam_sensor_i2c_reg_array) * total_bytes,
 		GFP_KERNEL);
