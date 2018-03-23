@@ -3906,6 +3906,7 @@ static int msm_compr_adsp_stream_cmd_put(struct snd_kcontrol *kcontrol,
 		ret = -EINVAL;
 		goto done;
 	}
+
 	actual_payload_len = sizeof(struct msm_adsp_event_data) +
 		event_data->payload_len;
 	if (actual_payload_len >= U32_MAX) {
@@ -3914,7 +3915,6 @@ static int msm_compr_adsp_stream_cmd_put(struct snd_kcontrol *kcontrol,
 		ret = -EINVAL;
 		goto done;
 	}
-
 
 	if (event_data->payload_len > sizeof(ucontrol->value.bytes.data)
 			- sizeof(struct msm_adsp_event_data)) {
