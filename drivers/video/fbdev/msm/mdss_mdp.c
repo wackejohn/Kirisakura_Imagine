@@ -2104,10 +2104,9 @@ static u32 mdss_mdp_scaler_init(struct mdss_data_type *mdata,
 			devm_kzalloc(&mdata->pdev->dev, sizeof(u32) *
 					mdata->scaler_off->ndest_scalers,
 					GFP_KERNEL);
-		if  (!mdata->scaler_off->dest_scaler_off) {
-			kfree(mdata->scaler_off->dest_scaler_off);
+		if  (!mdata->scaler_off->dest_scaler_off)
 			return -ENOMEM;
-		}
+
 		ret = mdss_mdp_parse_dt_handler(mdata->pdev,
 				"qcom,mdss-dest-scaler-off",
 				mdata->scaler_off->dest_scaler_off,
@@ -2118,10 +2117,9 @@ static u32 mdss_mdp_scaler_init(struct mdss_data_type *mdata,
 			devm_kzalloc(&mdata->pdev->dev, sizeof(u32) *
 					mdata->scaler_off->ndest_scalers,
 					GFP_KERNEL);
-		if  (!mdata->scaler_off->dest_scaler_lut_off) {
-			kfree(mdata->scaler_off->dest_scaler_lut_off);
+		if  (!mdata->scaler_off->dest_scaler_lut_off)
 			return -ENOMEM;
-		}
+
 		ret = mdss_mdp_parse_dt_handler(mdata->pdev,
 				"qcom,mdss-dest-scalers-lut-off",
 				mdata->scaler_off->dest_scaler_lut_off,
