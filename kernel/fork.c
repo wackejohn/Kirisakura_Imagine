@@ -79,6 +79,7 @@
 #include <linux/kcov.h>
 #include <linux/cpu_input_boost.h>
 #include <linux/devfreq_boost.h>
+#include <linux/cpufreq_times.h>
 
 #include <asm/pgtable.h>
 #include <asm/pgalloc.h>
@@ -356,6 +357,9 @@ void free_task(struct task_struct *tsk)
 	 * by now.
 	 */
 	WARN_ON_ONCE(atomic_read(&tsk->stack_refcount) != 0);
+#endif
+#ifdef CONFIG_CPU_FREQ_STAT
+	cpufreq_task_times_exit(tsk);
 #endif
 	rt_mutex_debug_task_free(tsk);
 	ftrace_graph_exit_task(tsk);
