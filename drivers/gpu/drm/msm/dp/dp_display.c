@@ -626,6 +626,8 @@ static void dp_display_clean(struct dp_display_private *dp)
 
 	dp->ctrl->push_idle(dp->ctrl);
 	dp->ctrl->off(dp->ctrl);
+	dp->panel->deinit(dp->panel);
+	dp->aux->deinit(dp->aux);
 	dp->power_on = false;
 }
 
