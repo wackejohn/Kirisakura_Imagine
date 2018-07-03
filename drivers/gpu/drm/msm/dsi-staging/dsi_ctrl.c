@@ -2890,43 +2890,6 @@ error:
 }
 
 /**
- * dsi_ctrl_update_host_engine_state_for_cont_splash() -
- *            set engine state for dsi controller during continuous splash
- * @dsi_ctrl:          DSI controller handle.
- * @state:             Engine state.
- *
- * Set host engine state for DSI controller during continuous splash.
- *
- * Return: error code.
- */
-int dsi_ctrl_update_host_engine_state_for_cont_splash(struct dsi_ctrl *dsi_ctrl,
-					enum dsi_engine_state state)
-{
-	int rc = 0;
-
-	if (!dsi_ctrl || (state >= DSI_CTRL_ENGINE_MAX)) {
-		pr_err("Invalid params\n");
-		return -EINVAL;
-	}
-
-	mutex_lock(&dsi_ctrl->ctrl_lock);
-
-	rc = dsi_ctrl_check_state(dsi_ctrl, DSI_CTRL_OP_HOST_ENGINE, state);
-	if (rc) {
-		pr_err("[DSI_%d] Controller state check failed, rc=%d\n",
-		       dsi_ctrl->cell_index, rc);
-		goto error;
-	}
-
-	pr_debug("[DSI_%d] Set host engine state = %d\n", dsi_ctrl->cell_index,
-		 state);
-	dsi_ctrl_update_state(dsi_ctrl, DSI_CTRL_OP_HOST_ENGINE, state);
-error:
-	mutex_unlock(&dsi_ctrl->ctrl_lock);
-	return rc;
-}
-
-/**
  * dsi_ctrl_set_power_state() - set power state for dsi controller
  * @dsi_ctrl:          DSI controller handle.
  * @state:             Power state.
