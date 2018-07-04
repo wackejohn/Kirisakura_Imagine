@@ -584,7 +584,6 @@ static int cam_eeprom_read_memory(struct cam_eeprom_ctrl_t *e_ctrl,
 			rc = camera_io_dev_read_seq(&e_ctrl->io_master_info,
 				emap[j].mem.addr, memptr,
 				emap[j].mem.addr_type,
-				emap[j].mem.data_type,
 				emap[j].mem.valid_size);
 //HTC_START
 			}
