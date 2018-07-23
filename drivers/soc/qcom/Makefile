@@ -98,3 +98,5 @@ obj-$(CONFIG_QSEE_IPC_IRQ_BRIDGE) += qsee_ipc_irq_bridge.o
 
 obj-$(CONFIG_HTC_WLAN_NV) += custom_platdev.o
 obj-$(CONFIG_QCOM_QDSS_BRIDGE) += qdss_bridge.o
+
+CFLAGS_watchdog_v2.o := $(call cc-disable-warning, gcc-compat)
