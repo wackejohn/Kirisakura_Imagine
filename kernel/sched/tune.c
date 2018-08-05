@@ -649,10 +649,6 @@ int schedtune_can_attach(struct cgroup_taskset *tset)
 		raw_spin_unlock(&bg->lock);
 		unlock_rq_of(rq, task, &irq_flags);
 
-		/* Update CPU boost group */
-		if (bg->group[src_bg].tasks == 0 || bg->group[dst_bg].tasks == 1)
-			schedtune_cpu_update(task_cpu(task));
-
 	}
 
 	return 0;
