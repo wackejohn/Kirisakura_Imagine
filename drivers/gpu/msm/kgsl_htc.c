@@ -49,7 +49,7 @@ unsigned int kgsl_get_alloc_size(int detailed)
 	struct kgsl_driver_htc_priv *priv = &kgsl_driver.priv;
 
 	if (detailed && time_after(jiffies, priv->next_jiffies)) {
-		priv->next_jiffies = jiffies + msecs_to_jiffies(20000);
+		priv->next_jiffies = jiffies + 20*HZ;
 		schedule_work(&kgsl_driver.priv.work);
 	}
 
