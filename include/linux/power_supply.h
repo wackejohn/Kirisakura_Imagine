@@ -293,6 +293,7 @@ enum power_supply_property {
 	POWER_SUPPLY_PROP_EXT_OTG_CONTROL,
 	POWER_SUPPLY_PROP_INT_OTG_CONTROL,
 	POWER_SUPPLY_PROP_VCONN_SEL,
+	POWER_SUPPLY_PROP_MAX
 };
 
 enum power_supply_type {
