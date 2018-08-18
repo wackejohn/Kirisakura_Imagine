@@ -609,7 +609,7 @@ void cam_sensor_shutdown(struct cam_sensor_ctrl_t *s_ctrl)
 	CAM_INFO(CAM_SENSOR, "cam_sensor_shutdown");
 //HTC_END
 	if ((s_ctrl->sensor_state == CAM_SENSOR_INIT) &&
-		(s_ctrl->is_probe_succeed == 0))
+		(s_ctrl->is_probe_succeed == 1))
 		return;
 
 	cam_sensor_release_resource(s_ctrl);
