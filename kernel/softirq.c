@@ -85,6 +85,7 @@ static void wakeup_softirqd(void)
 		wake_up_process(tsk);
 }
 
+/*
  * If ksoftirqd is scheduled, we do not want to process pending softirqs
  * right now. Let ksoftirqd handle this at its own rate, to get fairness,
  * unless we're doing some of the synchronous softirqs.
@@ -98,8 +99,6 @@ static bool ksoftirqd_running(unsigned long pending)
 		return false;
 	return tsk && (tsk->state == TASK_RUNNING);
 }
-
-/*
 
 /*
  * preempt_count and SOFTIRQ_OFFSET usage:
