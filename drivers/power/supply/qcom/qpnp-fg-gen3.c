@@ -1272,18 +1272,6 @@ static bool usb_psy_initialized(struct fg_chip *chip)
 	return chip->usb_psy;
 }
 
-static bool usb_psy_initialized(struct fg_chip *chip)
-{
-	if (chip->usb_psy)
-		return true;
-
-	chip->usb_psy = power_supply_get_by_name("usb");
-	if (!chip->usb_psy)
-		return false;
-
-	return true;
-}
-
 static bool pc_port_psy_initialized(struct fg_chip *chip)
 {
 	if (chip->pc_port_psy)
