@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2017, Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2018, Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -898,10 +898,16 @@ static int ufs_qcom_crypto_req_setup(struct ufs_hba *hba,
 	else
 		return 0;
 
-	/* Use request LBA as the DUN value */
-	if (req->bio)
-		*dun = (req->bio->bi_iter.bi_sector) >>
-				UFS_QCOM_ICE_TR_DATA_UNIT_4_KB;
+	/* Use request LBA or given dun as the DUN value */
+	if (req->bio) {
+		if (bio_dun(req->bio)) {
+			/* dun @bio can be split, so we have to adjust offset */
+			*dun = bio_dun(req->bio);
+		} else {
+			*dun = req->bio->bi_iter.bi_sector;
+			*dun >>= UFS_QCOM_ICE_TR_DATA_UNIT_4_KB;
+		}
+	}
 
 	ret = ufs_qcom_ice_req_setup(host, lrbp->cmd, cc_index, enable);
 
