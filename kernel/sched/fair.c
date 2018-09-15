@@ -73,6 +73,8 @@ walt_dec_cfs_rq_stats(struct cfs_rq *cfs_rq, struct task_struct *p) {}
 /*
  * Targeted preemption latency for CPU-bound tasks:
  * (default: 6ms * (1 + ilog(ncpus)), units: nanoseconds)
+ * 
+ * Changed the default to 5ms for experimentation.
  *
  * NOTE: this latency value is not the same as the concept of
  * 'timeslice length' - timeslices in CFS are of variable length
@@ -82,8 +84,8 @@ walt_dec_cfs_rq_stats(struct cfs_rq *cfs_rq, struct task_struct *p) {}
  * (to see the precise effective timeslice length of your workload,
  *  run vmstat and monitor the context-switches (cs) field)
  */
-unsigned int sysctl_sched_latency = 6000000ULL;
-unsigned int normalized_sysctl_sched_latency = 6000000ULL;
+unsigned int sysctl_sched_latency = 5000000ULL;
+unsigned int normalized_sysctl_sched_latency = 5000000ULL;
 
 unsigned int sysctl_sched_is_big_little = 1;
 unsigned int sysctl_sched_sync_hint_enable = 1;
@@ -143,7 +145,7 @@ const_debug unsigned int sysctl_sched_migration_cost = 500000UL;
  * distribution.
  * (default: 10msec)
  */
-unsigned int __read_mostly sysctl_sched_shares_window = 10000000UL;
+unsigned int __read_mostly sysctl_sched_shares_window = 7500000UL;
 
 #ifdef CONFIG_CFS_BANDWIDTH
 /*
