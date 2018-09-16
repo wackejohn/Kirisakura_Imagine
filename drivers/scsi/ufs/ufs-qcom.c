@@ -897,16 +897,17 @@ static int ufs_qcom_crypto_req_setup(struct ufs_hba *hba,
 		req = lrbp->cmd->request;
 	else
 		return 0;
-
-	/* Use request LBA or given dun as the DUN value */
+	/*
+	 * Right now ICE do not support variable dun but can be
+	 * taken as future enhancement
+	 * if (bio_dun(req->bio)) {
+	 *      dun @bio can be split, so we have to adjust offset
+	 *      *dun = bio_dun(req->bio);
+	 * } else
+	 */
 	if (req->bio) {
-		if (bio_dun(req->bio)) {
-			/* dun @bio can be split, so we have to adjust offset */
-			*dun = bio_dun(req->bio);
-		} else {
-			*dun = req->bio->bi_iter.bi_sector;
-			*dun >>= UFS_QCOM_ICE_TR_DATA_UNIT_4_KB;
-		}
+		*dun = req->bio->bi_iter.bi_sector;
+		*dun >>= UFS_QCOM_ICE_TR_DATA_UNIT_4_KB;
 	}
 
 	ret = ufs_qcom_ice_req_setup(host, lrbp->cmd, cc_index, enable);
