@@ -511,7 +511,6 @@ print_task(struct seq_file *m, struct rq *rq, struct task_struct *p)
 #endif
 
 	SEQ_printf(m, "\n");
-	if (!m) show_stack(p, NULL);
 }
 
 static void print_rq(struct seq_file *m, struct rq *rq, int rq_cpu)
@@ -1018,7 +1017,6 @@ void proc_sched_show_task(struct task_struct *p, struct seq_file *m)
 		P_SCHEDSTAT(se.statistics.nr_wakeups_sis_count);
 		/* select_energy_cpu_brute() */
 		P_SCHEDSTAT(se.statistics.nr_wakeups_secb_attempts);
-		P_SCHEDSTAT(se.statistics.nr_wakeups_secb_sync);
 		P_SCHEDSTAT(se.statistics.nr_wakeups_secb_idle_bt);
 		P_SCHEDSTAT(se.statistics.nr_wakeups_secb_insuff_cap);
 		P_SCHEDSTAT(se.statistics.nr_wakeups_secb_no_nrg_sav);

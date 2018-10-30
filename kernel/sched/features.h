@@ -49,7 +49,7 @@ SCHED_FEAT(NONTASK_CAPACITY, true)
  * Queue remote wakeups on the target CPU and process them
  * using the scheduler IPI. Reduces rq->lock contention/bounces.
  */
-SCHED_FEAT(TTWU_QUEUE, false)
+SCHED_FEAT(TTWU_QUEUE, true)
 
 /*
  * When doing wakeups, attempt to limit superfluous scans of the LLC domain.
@@ -69,17 +69,6 @@ SCHED_FEAT(SIS_AVG_CPU, false)
 SCHED_FEAT(RT_PUSH_IPI, true)
 #endif
 
-/*
- * Apply schedtune boost hold to tasks of all sched classes.
- * If enabled, schedtune will hold the boost applied to a CPU
- * for 50ms regardless of task activation - if the task is
- * still running 50ms later, the boost hold expires and schedtune
- * boost will expire immediately the task stops.
- * If disabled, this behaviour will only apply to tasks of the
- * RT class.
- */
-SCHED_FEAT(SCHEDTUNE_BOOST_HOLD_ALL, true)
-
 SCHED_FEAT(FORCE_SD_OVERLAP, false)
 SCHED_FEAT(RT_RUNTIME_SHARE, true)
 SCHED_FEAT(LB_MIN, false)
@@ -94,3 +83,24 @@ SCHED_FEAT(ENERGY_AWARE, true)
 #else
 SCHED_FEAT(ENERGY_AWARE, false)
 #endif
+
+/*
+ * Minimum capacity capping. Keep track of minimum capacity factor when
+ * minimum frequency available to a policy is modified.
+ * If enabled, this can be used to inform the scheduler about capacity
+ * restrictions.
+ */
+SCHED_FEAT(MIN_CAPACITY_CAPPING, false)
+
+/*
+ * Enforce the priority of candidates selected by find_best_target()
+ * ON: If the target CPU saves any energy, use that.
+ * OFF: Use whichever of target or backup saves most.
+ */
+SCHED_FEAT(FBT_STRICT_ORDER, false)
+/*
+ * Enforce schedtune.prefer_idle to take need_idle path.
+ * ON: schedtune.prefer_idle is replaced with need_idle
+ * OFF: schedtune.prefer_idle is honored as is.
+ */
+SCHED_FEAT(EAS_USE_NEED_IDLE, false)

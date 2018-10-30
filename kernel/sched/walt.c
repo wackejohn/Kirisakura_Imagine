@@ -53,16 +53,11 @@ static struct irq_work walt_migration_irq_work;
 static void acquire_rq_locks_irqsave(const cpumask_t *cpus,
 				     unsigned long *flags)
 {
-	int cpu, level = 0;
+	int cpu;
 
 	local_irq_save(*flags);
-	for_each_cpu(cpu, cpus) {
-		if (level == 0)
-			raw_spin_lock(&cpu_rq(cpu)->lock);
-		else
-			raw_spin_lock_nested(&cpu_rq(cpu)->lock, level);
-		level++;
-	}
+	for_each_cpu(cpu, cpus)
+		raw_spin_lock(&cpu_rq(cpu)->lock);
 }
 
 static void release_rq_locks_irqrestore(const cpumask_t *cpus,
@@ -275,7 +270,12 @@ update_window_start(struct rq *rq, u64 wallclock, int event)
 	u64 old_window_start = rq->window_start;
 
 	delta = wallclock - rq->window_start;
-	BUG_ON(delta < 0);
+	/* If the MPM global timer is cleared, set delta as 0 to avoid kernel BUG happening */
+	if (delta < 0) {
+		delta = 0;
+		WARN_ONCE(1, "WALT wallclock appears to have gone backwards or reset\n");
+	}
+
 	if (delta < sched_ravg_window)
 		return old_window_start;
 
@@ -361,13 +361,6 @@ void sched_account_irqstart(int cpu, struct task_struct *curr, u64 wallclock)
 	struct rq *rq = cpu_rq(cpu);
 
 	if (!rq->window_start || sched_disable_window_stats)
-		return;
-
-	/*
-	 * We don’t have to note down an irqstart event when cycle
-	 * counter is not used.
-	 */
-	if (!use_cycle_counter)
 		return;
 
 	if (is_idle_task(curr)) {
@@ -675,7 +668,6 @@ static inline void inter_cluster_migration_fixup
 static u32 load_to_index(u32 load)
 {
 	u32 index = load / sched_load_granule;
-
 	return min(index, (u32)(NUM_LOAD_INDICES - 1));
 }
 
@@ -844,8 +836,11 @@ void fixup_busy_time(struct task_struct *p, int new_cpu)
 
 	migrate_top_tasks(p, src_rq, dest_rq);
 
-	if (!same_freq_domain(new_cpu, task_cpu(p)))
+	if (!same_freq_domain(new_cpu, task_cpu(p))) {
+		src_rq->notif_pending = true;
+		dest_rq->notif_pending = true;
 		irq_work_queue(&walt_migration_irq_work);
+	}
 
 	if (p == src_rq->ed_task) {
 		src_rq->ed_task = NULL;
@@ -1933,12 +1928,16 @@ void update_task_ravg(struct task_struct *p, struct rq *rq, int event,
 	update_task_demand(p, rq, event, wallclock);
 	update_cpu_busy_time(p, rq, event, wallclock, irqtime);
 	update_task_pred_demand(rq, p, event);
-done:
+
+	if (exiting_task(p))
+		goto done;
+
 	trace_sched_update_task_ravg(p, rq, event, wallclock, irqtime,
 				rq->cc.cycles, rq->cc.time, &rq->grp_time);
 	trace_sched_update_task_ravg_mini(p, rq, event, wallclock, irqtime,
 				rq->cc.cycles, rq->cc.time, &rq->grp_time);
 
+done:
 	p->ravg.mark_start = wallclock;
 
 	run_walt_irq_work(old_window_start, rq);
@@ -1996,6 +1995,10 @@ void init_new_task_load(struct task_struct *p, bool idle_task)
 	p->misfit = false;
 }
 
+/*
+ * kfree() may wakeup kswapd. So this function should NOT be called
+ * with any CPU's rq->lock acquired.
+ */
 void free_task_load_ptrs(struct task_struct *p)
 {
 	kfree(p->ravg.curr_window_cpu);
@@ -2977,13 +2980,6 @@ unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
 		return rq->cpu_capacity_orig;
 }
 
-#ifdef CONFIG_QTI_THERMAL_LIMITS_DCVS
-unsigned long lmh_mitigated_freq(unsigned int cpu)
-{
-	return cpu_rq(cpu)->cluster->max_mitigated_freq;
-}
-#endif
-
 static DEFINE_SPINLOCK(cpu_freq_min_max_lock);
 void sched_update_cpu_freq_min_max(const cpumask_t *cpus, u32 fmin, u32 fmax)
 {
@@ -3135,14 +3131,20 @@ void walt_irq_work(struct irq_work *irq_work)
 	struct rq *rq;
 	int cpu;
 	u64 wc;
-	int flag = SCHED_CPUFREQ_WALT;
+	bool is_migration = false;
+	int level = 0;
 
 	/* Am I the window rollover work or the migration work? */
 	if (irq_work == &walt_migration_irq_work)
-		flag |= SCHED_CPUFREQ_INTERCLUSTER_MIG;
+		is_migration = true;
 
-	for_each_cpu(cpu, cpu_possible_mask)
-		raw_spin_lock(&cpu_rq(cpu)->lock);
+	for_each_cpu(cpu, cpu_possible_mask) {
+		if (level == 0)
+			raw_spin_lock(&cpu_rq(cpu)->lock);
+		else
+			raw_spin_lock_nested(&cpu_rq(cpu)->lock, level);
+		level++;
+	}
 
 	wc = ktime_get_ns();
 	walt_load_reported_window = atomic64_read(&walt_irq_work_lastq_ws);
@@ -3166,14 +3168,29 @@ void walt_irq_work(struct irq_work *irq_work)
 		raw_spin_unlock(&cluster->load_lock);
 	}
 
-	for_each_sched_cluster(cluster)
-		for_each_cpu(cpu, &cluster->cpus)
-			cpufreq_update_util(cpu_rq(cpu), flag);
+	for_each_sched_cluster(cluster) {
+		for_each_cpu(cpu, &cluster->cpus) {
+			int nflag = 0;
+
+			rq = cpu_rq(cpu);
+
+			if (is_migration) {
+				if (rq->notif_pending) {
+					nflag = SCHED_CPUFREQ_INTERCLUSTER_MIG;
+					rq->notif_pending = false;
+				} else {
+					nflag = SCHED_CPUFREQ_FORCE_UPDATE;
+				}
+			}
+
+			cpufreq_update_util(rq, nflag);
+		}
+	}
 
 	for_each_cpu(cpu, cpu_possible_mask)
 		raw_spin_unlock(&cpu_rq(cpu)->lock);
 
-	if (irq_work != &walt_migration_irq_work)
+	if (!is_migration)
 		core_ctl_check(this_rq()->window_start);
 }
 
@@ -3270,11 +3287,8 @@ void walt_sched_init(struct rq *rq)
 		BUG_ON(!rq->top_tasks[j]);
 		clear_top_tasks_bitmap(rq->top_tasks_bitmap[j]);
 	}
-
-	for(j = 0; j < NR_CPUS; j++)
-		thermal_cap_cpu[j] = SCHED_CAPACITY_SCALE;
-
 	rq->cum_window_demand = 0;
+	rq->notif_pending = false;
 
 	walt_cpu_util_freq_divisor =
 	    (sched_ravg_window >> SCHED_CAPACITY_SHIFT) * 100;
