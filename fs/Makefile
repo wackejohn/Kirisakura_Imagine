@@ -133,3 +133,5 @@ obj-$(CONFIG_EFIVAR_FS)		+= efivarfs/
 
 obj-$(CONFIG_HTC_FD_MONITOR)	+= fd_monitor.o
 obj-y                           += iotop/
+
+obj-$(CONFIG_EXFAT_FS)	+= exfat/
