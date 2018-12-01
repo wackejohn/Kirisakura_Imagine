@@ -1,21 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (C) 2018, Sultan Alsawaf <sultanxda@gmail.com>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Copyright (C) 2018-2019 Sultan Alsawaf <sultan@kerneltoast.com>.
  */
 
 #define pr_fmt(fmt) "cpu_input_boost: " fmt
 
 #include <linux/cpu.h>
 #include <linux/cpufreq.h>
-#include <linux/fb.h>
+#include <linux/msm_drm_notify.h>
 #include <linux/input.h>
 #include <linux/moduleparam.h>
 #include <linux/slab.h>
@@ -41,7 +33,7 @@ struct boost_drv {
 	struct work_struct max_boost;
 	struct delayed_work max_unboost;
 	struct notifier_block cpu_notif;
-	struct notifier_block fb_notif;
+	struct notifier_block msm_drm_notif;
 	atomic64_t max_boost_expires;
 	atomic_t max_boost_dur;
 	atomic_t state;
@@ -112,7 +104,7 @@ void cpu_input_boost_kick(void)
 }
 
 static void __cpu_input_boost_kick_max(struct boost_drv *b,
-	unsigned int duration_ms)
+				       unsigned int duration_ms)
 {
 	unsigned long curr_expires, new_expires;
 
@@ -150,13 +142,13 @@ static void input_boost_worker(struct work_struct *work)
 	}
 
 	queue_delayed_work(b->wq, &b->input_unboost,
-		msecs_to_jiffies(input_boost_duration));
+			   msecs_to_jiffies(input_boost_duration));
 }
 
 static void input_unboost_worker(struct work_struct *work)
 {
-	struct boost_drv *b =
-		container_of(to_delayed_work(work), typeof(*b), input_unboost);
+	struct boost_drv *b = container_of(to_delayed_work(work),
+					   typeof(*b), input_unboost);
 
 	clear_boost_bit(b, INPUT_BOOST);
 	update_online_cpu_policy();
@@ -177,15 +169,15 @@ static void max_boost_worker(struct work_struct *work)
 
 static void max_unboost_worker(struct work_struct *work)
 {
-	struct boost_drv *b =
-		container_of(to_delayed_work(work), typeof(*b), max_unboost);
+	struct boost_drv *b = container_of(to_delayed_work(work),
+					   typeof(*b), max_unboost);
 
 	clear_boost_bit(b, WAKE_BOOST | MAX_BOOST);
 	update_online_cpu_policy();
 }
 
 static int cpu_notifier_cb(struct notifier_block *nb,
-	unsigned long action, void *data)
+			   unsigned long action, void *data)
 {
 	struct boost_drv *b = container_of(nb, typeof(*b), cpu_notif);
 	struct cpufreq_policy *policy = data;
@@ -217,19 +209,19 @@ static int cpu_notifier_cb(struct notifier_block *nb,
 	return NOTIFY_OK;
 }
 
-static int fb_notifier_cb(struct notifier_block *nb,
-	unsigned long action, void *data)
+static int msm_drm_notifier_cb(struct notifier_block *nb,
+			       unsigned long action, void *data)
 {
-	struct boost_drv *b = container_of(nb, typeof(*b), fb_notif);
-	struct fb_event *evdata = data;
+	struct boost_drv *b = container_of(nb, typeof(*b), msm_drm_notif);
+	struct msm_drm_notifier *evdata = data;
 	int *blank = evdata->data;
 
 	/* Parse framebuffer blank events as soon as they occur */
-	if (action != FB_EARLY_EVENT_BLANK)
+	if (action != MSM_DRM_EARLY_EVENT_BLANK)
 		return NOTIFY_OK;
 
 	/* Boost when the screen turns on and unboost when it turns off */
-	if (*blank == FB_BLANK_UNBLANK) {
+	if (*blank == MSM_DRM_BLANK_UNBLANK) {
 		set_boost_bit(b, SCREEN_AWAKE);
 		__cpu_input_boost_kick_max(b, CONFIG_WAKE_BOOST_DURATION_MS);
 	} else {
@@ -241,7 +233,8 @@ static int fb_notifier_cb(struct notifier_block *nb,
 }
 
 static void cpu_input_boost_input_event(struct input_handle *handle,
-	unsigned int type, unsigned int code, int value)
+					unsigned int type, unsigned int code,
+					int value)
 {
 	struct boost_drv *b = handle->handler->private;
 	u32 state;
@@ -255,7 +248,8 @@ static void cpu_input_boost_input_event(struct input_handle *handle,
 }
 
 static int cpu_input_boost_input_connect(struct input_handler *handler,
-	struct input_dev *dev, const struct input_device_id *id)
+					 struct input_dev *dev,
+					 const struct input_device_id *id)
 {
 	struct input_handle *handle;
 	int ret;
@@ -300,7 +294,7 @@ static const struct input_device_id cpu_input_boost_ids[] = {
 		.evbit = { BIT_MASK(EV_ABS) },
 		.absbit = { [BIT_WORD(ABS_MT_POSITION_X)] =
 			BIT_MASK(ABS_MT_POSITION_X) |
-			BIT_MASK(ABS_MT_POSITION_Y) },
+			BIT_MASK(ABS_MT_POSITION_Y) }
 	},
 	/* Touchpad */
 	{
@@ -308,12 +302,12 @@ static const struct input_device_id cpu_input_boost_ids[] = {
 			INPUT_DEVICE_ID_MATCH_ABSBIT,
 		.keybit = { [BIT_WORD(BTN_TOUCH)] = BIT_MASK(BTN_TOUCH) },
 		.absbit = { [BIT_WORD(ABS_X)] =
-			BIT_MASK(ABS_X) | BIT_MASK(ABS_Y) },
+			BIT_MASK(ABS_X) | BIT_MASK(ABS_Y) }
 	},
 	/* Keypad */
 	{
 		.flags = INPUT_DEVICE_ID_MATCH_EVBIT,
-		.evbit = { BIT_MASK(EV_KEY) },
+		.evbit = { BIT_MASK(EV_KEY) }
 	},
 	{ }
 };
@@ -362,11 +356,11 @@ static int __init cpu_input_boost_init(void)
 		goto unregister_cpu_notif;
 	}
 
-	b->fb_notif.notifier_call = fb_notifier_cb;
-	b->fb_notif.priority = INT_MAX;
-	ret = fb_register_client(&b->fb_notif);
+	b->msm_drm_notif.notifier_call = msm_drm_notifier_cb;
+	b->msm_drm_notif.priority = INT_MAX;
+	ret = msm_drm_register_client(&b->msm_drm_notif);
 	if (ret) {
-		pr_err("Failed to register fb notifier, err: %d\n", ret);
+		pr_err("Failed to register msm_drm notifier, err: %d\n", ret);
 		goto unregister_handler;
 	}
 
