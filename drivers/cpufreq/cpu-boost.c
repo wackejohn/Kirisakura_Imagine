@@ -36,8 +36,8 @@ static struct work_struct input_boost_work;
 
 static bool input_boost_enabled;
 
-static unsigned int input_boost_ms = 40;
-module_param(input_boost_ms, uint, 0644);
+static unsigned int input_boost_ms_stune = 1250;
+module_param(input_boost_ms_stune, uint, 0644);
 
 static unsigned int sched_boost_on_input;
 module_param(sched_boost_on_input, uint, 0644);
@@ -45,7 +45,7 @@ module_param(sched_boost_on_input, uint, 0644);
 static bool sched_boost_active;
 
 #ifdef CONFIG_DYNAMIC_STUNE_BOOST
-static int dynamic_stune_boost;
+static int dynamic_stune_boost = 50;
 module_param(dynamic_stune_boost, uint, 0644);
 static bool stune_boost_active;
 static int boost_slot;
@@ -245,7 +245,7 @@ static void do_input_boost(struct work_struct *work)
 #endif /* CONFIG_DYNAMIC_STUNE_BOOST */
 
 	queue_delayed_work(cpu_boost_wq, &input_boost_rem,
-					msecs_to_jiffies(input_boost_ms));
+					msecs_to_jiffies(input_boost_ms_stune));
 }
 
 static void cpuboost_input_event(struct input_handle *handle,
