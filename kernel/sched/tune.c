@@ -1136,12 +1136,13 @@ out:
 static void
 schedtune_boostgroup_release(struct schedtune *st)
 {
-#ifdef CONFIG_DYNAMIC_STUNE_BOOST
-	/* Free dynamic boost slots */
-	boost_slots_release(st);
-#endif // CONFIG_DYNAMIC_STUNE_BOOST
 	struct boost_groups *bg;
 	int cpu;
+	
+	#ifdef CONFIG_DYNAMIC_STUNE_BOOST
+	/* Free dynamic boost slots */
+	boost_slots_release(st);
+	#endif // CONFIG_DYNAMIC_STUNE_BOOST
 
 	/* Reset per CPUs boost group support */
 	for_each_possible_cpu(cpu) {
