@@ -20,7 +20,7 @@
 		htc,ddic-color-modes-0;
 		htc,ddic-color-modes-7;
 		htc,ddic-color-modes-9;
-		qcom,mdss-mdp-transfer-time-us = <13400>;
+		qcom,mdss-mdp-transfer-time-us = <7000>;
 		qcom,mdss-dsi-virtual-channel-id = <0>;
 		qcom,mdss-pan-physical-width-dimension  = <68>;
 		qcom,mdss-pan-physical-height-dimension = <136>;
@@ -29,8 +29,13 @@
 		qcom,mdss-dsi-underflow-color = <0xff>;
 		qcom,mdss-dsi-border-color = <0>;
 		qcom,mdss-dsi-traffic-mode = "non_burst_sync_event";
+		qcom,ulps-enabled;
+		qcom,suspend-ulps-enabled;
+		qcom,panel-allow-phy-poweroff;
 		qcom,mdss-dsi-bllp-eof-power-mode;
 		qcom,mdss-dsi-bllp-power-mode;
+		qcom,partial-update-enabled = "single_roi";
+		qcom,panel-roi-alignment = <720 8 720 8 720 8>;
 		qcom,mdss-dsi-lane-0-state;
 		qcom,mdss-dsi-lane-1-state;
 		qcom,mdss-dsi-lane-2-state;
@@ -44,7 +49,6 @@
 		qcom,mdss-dsi-te-dcs-command = <1>;
 		qcom,mdss-dsi-panel-status-command = [06 01 00 01 05 00 02 0A 00];
 		qcom,mdss-dsi-panel-status-command-state = "dsi_hs_mode";
-		qcom,mdss-dsi-lp11-init;
 		qcom,mdss-dsi-panel-hdr-enabled;
 		qcom,mdss-dsi-panel-hdr-color-primaries = <14500 15500 32000
 			17000 15500 30000 8000 3000>;

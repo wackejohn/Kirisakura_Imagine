@@ -120,6 +120,10 @@
 	qcom,dsi-display-active;
 };
 
+&mdss_dsi_phy0 {
+	qcom,panel-allow-phy-poweroff;
+};
+
 &sde_dsi_active {
 	mux {
 		pins = "gpio6";
