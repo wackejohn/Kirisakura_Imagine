@@ -3795,7 +3795,7 @@ void smblib_usb_plugin_hard_reset_locked(struct smb_charger *chg)
 #ifdef CONFIG_HTC_BATT
 		if (delayed_work_pending(&chg->type_c_no_debounce_work))
 			cancel_delayed_work_sync(&chg->type_c_no_debounce_work);
-		schedule_delayed_work(&chg->type_c_no_debounce_work, msecs_to_jiffies(20000));
+		queue_delayed_work(system_power_efficient_wq, &chg->type_c_no_debounce_work, msecs_to_jiffies(20000));
 #endif //CONFIG_HTC_BATT
 	} else {
 		smblib_cc2_sink_removal_enter(chg);
@@ -3852,7 +3852,7 @@ void smblib_usb_plugin_locked(struct smb_charger *chg)
 
 		/* Schedule work to enable parallel charger */
 		vote(chg->awake_votable, PL_DELAY_VOTER, true, 0);
-		schedule_delayed_work(&chg->pl_enable_work,
+		queue_delayed_work(system_power_efficient_wq, &chg->pl_enable_work,
 					msecs_to_jiffies(PL_DELAY_MS));
 		/* vbus rising when APSD was disabled and PD_ACTIVE = 0 */
 		if (get_effective_result(chg->apsd_disable_votable) &&
@@ -3861,7 +3861,7 @@ void smblib_usb_plugin_locked(struct smb_charger *chg)
 #ifdef CONFIG_HTC_BATT
 		if (delayed_work_pending(&chg->type_c_no_debounce_work))
 			cancel_delayed_work_sync(&chg->type_c_no_debounce_work);
-		schedule_delayed_work(&chg->type_c_no_debounce_work, msecs_to_jiffies(20000));
+		queue_delayed_work(system_power_efficient_wq, &chg->type_c_no_debounce_work, msecs_to_jiffies(20000));
 #endif //CONFIG_HTC_BATT
 	} else {
 		if (chg->fake_usb_insertion) {
@@ -3942,7 +3942,7 @@ irqreturn_t smblib_handle_icl_change(int irq, void *data)
 			delay = 0;
 
 		cancel_delayed_work_sync(&chg->icl_change_work);
-		schedule_delayed_work(&chg->icl_change_work,
+		queue_delayed_work(system_power_efficient_wq, &chg->icl_change_work,
 						msecs_to_jiffies(delay));
 	}
 
@@ -4255,7 +4255,7 @@ static void smblib_handle_apsd_done(struct smb_charger *chg, bool rising)
 				htc_notify_unknown_charger(true);
 			else {
 				chg->dpdm_float_checked = true;
-				schedule_delayed_work(&chg->dpdm_floating_chk_work,
+				queue_delayed_work(system_power_efficient_wq, &chg->dpdm_floating_chk_work,
 					msecs_to_jiffies(FLOAT_CHARGER_CHK_DELAY_MS));
 			}
 		}
@@ -4263,14 +4263,14 @@ static void smblib_handle_apsd_done(struct smb_charger *chg, bool rising)
 		break;
 	case DCP_CHARGER_BIT:
 		if (chg->wa_flags & QC_CHARGER_DETECTION_WA_BIT)
-			schedule_delayed_work(&chg->hvdcp_detect_work,
+			queue_delayed_work(system_power_efficient_wq, &chg->hvdcp_detect_work,
 					      msecs_to_jiffies(HVDCP_DET_MS));
 #ifdef CONFIG_HTC_BATT
 		// DCP current
 		if (!chg->pd_active){
 			rp_current = get_rp_based_dcp_current(chg, chg->typec_mode);
 			vote(chg->usb_icl_votable, USB_PSY_VOTER, true, rp_current);
-			schedule_delayed_work(&chg->chk_usb_icl_work,
+			queue_delayed_work(system_power_efficient_wq, &chg->chk_usb_icl_work,
 				msecs_to_jiffies(ICL_CHECK_DELAY_MS));
 		}
 #endif //CONFIG_HTC_BATT
@@ -4831,7 +4831,7 @@ static void smblib_handle_typec_cc_state_change(struct smb_charger *chg)
 	if ((chg->typec_mode == POWER_SUPPLY_TYPEC_NONE) &&
 			(chg->cc_floating_cnt == 0)) {
 		if (!delayed_work_pending(&chg->cc_floating_chk_work))
-			schedule_delayed_work(&chg->cc_floating_chk_work, msecs_to_jiffies(3000));
+			queue_delayed_work(system_power_efficient_wq, &chg->cc_floating_chk_work, msecs_to_jiffies(3000));
 	}
 
 	// Update rp current for typec
@@ -4891,7 +4891,7 @@ irqreturn_t smblib_handle_usb_typec_change(int irq, void *data)
 		cancel_delayed_work_sync(&chg->uusb_otg_work);
 		vote(chg->awake_votable, OTG_DELAY_VOTER, true, 0);
 		smblib_dbg(chg, PR_INTERRUPT, "Scheduling OTG work\n");
-		schedule_delayed_work(&chg->uusb_otg_work,
+		queue_delayed_work(system_power_efficient_wq, &chg->uusb_otg_work,
 				msecs_to_jiffies(chg->otg_delay_ms));
 		return IRQ_HANDLED;
 	}
@@ -4939,7 +4939,7 @@ irqreturn_t smblib_handle_high_duty_cycle(int irq, void *data)
 	if (chg->irq_info[HIGH_DUTY_CYCLE_IRQ].irq)
 		disable_irq_nosync(chg->irq_info[HIGH_DUTY_CYCLE_IRQ].irq);
 
-	schedule_delayed_work(&chg->clear_hdc_work, msecs_to_jiffies(60));
+	queue_delayed_work(system_power_efficient_wq, &chg->clear_hdc_work, msecs_to_jiffies(60));
 
 	return IRQ_HANDLED;
 }
@@ -5005,7 +5005,7 @@ irqreturn_t smblib_handle_switcher_power_ok(int irq, void *data)
 			 * permanently suspending the input if the boost-back
 			 * condition is unintentionally hit.
 			 */
-			schedule_delayed_work(&chg->bb_removal_work,
+			queue_delayed_work(system_power_efficient_wq, &chg->bb_removal_work,
 				msecs_to_jiffies(BOOST_BACK_UNVOTE_DELAY_MS));
 		}
 	}
@@ -5258,7 +5258,7 @@ static void smblib_otg_oc_work(struct work_struct *work)
 	 * triggered then it is likely that the software based soft start was
 	 * successful and the VBUS < 1V restriction should be re-enabled.
 	 */
-	schedule_delayed_work(&chg->otg_ss_done_work, msecs_to_jiffies(500));
+	queue_delayed_work(system_power_efficient_wq, &chg->otg_ss_done_work, msecs_to_jiffies(500));
 
 	rc = _smblib_vbus_regulator_disable(chg->vbus_vreg->rdev);
 	if (rc < 0) {
@@ -5514,7 +5514,7 @@ static void chk_usb_icl_work(struct work_struct *work)
 		chk_cnt = 0;
 	} else {
 		chk_cnt++;
-		schedule_delayed_work(&chg->chk_usb_icl_work,
+		queue_delayed_work(system_power_efficient_wq, &chg->chk_usb_icl_work,
 			msecs_to_jiffies(ICL_RECHK_DELAY_MS));
 	}
 
@@ -5565,7 +5565,7 @@ static void smblib_cc_floating_chk_work(struct work_struct *work)
 				smblib_rerun_apsd(chg);
 			}
 
-			schedule_delayed_work(&chg->cc_floating_chk_work, msecs_to_jiffies(3000));
+			queue_delayed_work(system_power_efficient_wq, &chg->cc_floating_chk_work, msecs_to_jiffies(3000));
 		} else if (present > 0) {
 			chg->cc_floating_cnt = 5;
 		} else {
@@ -5637,7 +5637,7 @@ static void smblib_type_c_no_debounce_work(struct work_struct *work)
 
 	if (!internal_otg && !external_otg && usb_present && !cc_detected) {
 		smblib_err(chg, "[CC FLOAT] No CC pin debunce done, change to micro-USB mode rc=%d\n", rc);
-		schedule_delayed_work(&chg->cc_floating_chk_work, msecs_to_jiffies(0));
+		queue_delayed_work(system_power_efficient_wq, &chg->cc_floating_chk_work, msecs_to_jiffies(0));
 	}
 
 	return;
