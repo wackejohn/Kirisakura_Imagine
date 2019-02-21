@@ -507,7 +507,7 @@ void sde_connector_schedule_status_work(struct drm_connector *connector,
 		(info.capabilities & MSM_DISPLAY_ESD_ENABLED)) {
 		if (en) {
 			/* Schedule ESD status check */
-			schedule_delayed_work(&c_conn->status_work,
+			queue_delayed_work(system_power_efficient_wq, &c_conn->status_work,
 				msecs_to_jiffies(STATUS_CHECK_INTERVAL_MS));
 			c_conn->esd_status_check = true;
 		} else {
@@ -1944,7 +1944,7 @@ static void sde_connector_check_status_work(struct work_struct *work)
 	if (rc > 0) {
 		SDE_DEBUG("esd check status success conn_id: %d enc_id: %d\n",
 				conn->base.base.id, conn->encoder->base.id);
-		schedule_delayed_work(&conn->status_work,
+		queue_delayed_work(system_power_efficient_wq, &conn->status_work,
 			msecs_to_jiffies(STATUS_CHECK_INTERVAL_MS));
 		return;
 	}

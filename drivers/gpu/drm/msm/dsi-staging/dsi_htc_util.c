@@ -1144,7 +1144,7 @@ void htc_dimming_on(void)
 		return;
 
 	dimming_work.dimming_on = true;
-	schedule_delayed_work(&dimming_work.dimming_on_work, msecs_to_jiffies(1000));
+	queue_delayed_work(system_power_efficient_wq, &dimming_work.dimming_on_work, msecs_to_jiffies(1000));
 }
 
 void htc_dimming_off(void)

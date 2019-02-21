@@ -2002,7 +2002,7 @@ static void is_usb_overheat_worker(struct work_struct *work)
 		}
 		g_usb_overheat_check_count++;
 		if(!g_usb_overheat)
-			schedule_delayed_work(&htc_batt_info.is_usb_overheat_work, msecs_to_jiffies(USB_OVERHEAT_CHECK_PERIOD_MS));
+			queue_delayed_work(system_power_efficient_wq, &htc_batt_info.is_usb_overheat_work, msecs_to_jiffies(USB_OVERHEAT_CHECK_PERIOD_MS));
 		else{
 			BATT_LOG("%s: USB overheat! cable_in_usb_temp:%d, usb_temp:%d, count = %d\n",
 							__func__, last_usb_conn_temp, usb_conn_temp, g_usb_overheat_check_count);
@@ -2069,7 +2069,7 @@ static void htc_usb_overheat_routine(void)
 
 	if (b_sched_quick_polling) {
 		if (!delayed_work_pending(&htc_batt_info.htc_usb_overheat_work)) {
-			schedule_delayed_work(&htc_batt_info.htc_usb_overheat_work, 0);
+			queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htc_usb_overheat_work, 0);
 		}
 	}
 
@@ -2141,7 +2141,7 @@ static void htc_usb_overheat_worker(struct work_struct *work)
 	}
 
 	if (b_sched_next)
-		schedule_delayed_work(&htc_batt_info.htc_usb_overheat_work, msecs_to_jiffies(HTC_USB_OVERHEAT_POLLING_TIME_MS));
+		queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htc_usb_overheat_work, msecs_to_jiffies(HTC_USB_OVERHEAT_POLLING_TIME_MS));
 
 	BATT_LOG("[USBOH] Prev state:%d, Curr state:%d, conn_temp=%d, batt_temp=%d\n",
 			prev_state, g_htc_usb_overheat_check_state, usb_conn_temp, batt_temp);
@@ -2172,7 +2172,7 @@ static void cable_impedance_worker(struct work_struct *work)
 		gs_cable_impedance = 4;
 		pr_err("[Cable impedance]AICL(%dmA) is not ready, pending the detection 2 seconds!\n",
 			get_property(htc_batt_info.usb_psy, POWER_SUPPLY_PROP_INPUT_CURRENT_SETTLED)/1000);
-		schedule_delayed_work(&htc_batt_info.cable_impedance_work, msecs_to_jiffies(2000));
+		queue_delayed_work(system_power_efficient_wq, &htc_batt_info.cable_impedance_work, msecs_to_jiffies(2000));
 		return;
 	}
 
@@ -2324,7 +2324,7 @@ static int fb_notifier_callback(struct notifier_block *self,
 					set_aicdata(IS_SCREEN_OFF);
 #endif
 					if (htcchg_on)
-						schedule_delayed_work(&htc_batt_info.htcchg_screen_work,
+						queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htcchg_screen_work,
 							msecs_to_jiffies(HTCCHG_SCREEN_OFF_DELAY_MS));
                                 break;
                 }
@@ -2368,7 +2368,7 @@ static void htcchg_cc_leave(void)
 	// Reset screen on ibat limit
 	g_is_screen_on_limit_ibat = false;
 	if (htc_batt_info.rep.charging_source == POWER_SUPPLY_TYPE_USB_HVDCP_3)
-		schedule_delayed_work(&htc_batt_info.screen_ibat_limit_enable_work, msecs_to_jiffies(SCREEN_LIMIT_IBAT_DELAY_MS));
+		queue_delayed_work(system_power_efficient_wq, &htc_batt_info.screen_ibat_limit_enable_work, msecs_to_jiffies(SCREEN_LIMIT_IBAT_DELAY_MS));
 
 	// Change IBAT SENSE
 	htc_batt_info.icharger->register_write(FG_BATT_INFO_IBATT_SENSING_CFG, SOURCE_SELECT_MASK, SRC_SEL_BATFET);
@@ -2415,7 +2415,7 @@ static void htcchg_cc_entry(void)
 	set_usb_psy_property(POWER_SUPPLY_PROP_SDP_CURRENT_MAX, HTCCHG_INIT_CURR);
 
 	pr_info("[CC] STEP3 : ==========Create init queue==========\n");
-	schedule_delayed_work(&htc_batt_info.htcchg_init_work,	msecs_to_jiffies(HTCCHG_INIT_PERIOD_MS));
+	queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htcchg_init_work,	msecs_to_jiffies(HTCCHG_INIT_PERIOD_MS));
 }
 
 static void htcchg_check_cc_status(void)
@@ -2510,7 +2510,7 @@ static void htcchg_vbus_adjust_worker(struct work_struct *work)
 			ibat_cnt++;
 			htc_batt_info.icharger->register_write(CMD_HVDCP_2_REG,
 				SINGLE_INCREMENT_BIT, SINGLE_INCREMENT_BIT);
-			schedule_delayed_work(&htc_batt_info.htcchg_vbus_adjust_work,
+			queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htcchg_vbus_adjust_work,
 				msecs_to_jiffies(HTCCHG_VBUS_ADJUST_PERIOD_MS));
 		} else {
 			pr_info("[CC] IBAT reach, delay 5 sec.!!!, Vbus : %d, ISEN : %d\n", vbus_for_cc_check, ibat_for_cc_check);
@@ -2518,7 +2518,7 @@ static void htcchg_vbus_adjust_worker(struct work_struct *work)
 			vbus_cnt = 0;
 			not_entry_again = false;
 			// Do nothing, ibat reach
-			schedule_delayed_work(&htc_batt_info.htcchg_vbus_adjust_work,
+			queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htcchg_vbus_adjust_work,
 					msecs_to_jiffies(HTCCHG_CHARGE_STATUS_PERIOD_MS));
 		}
 	}else{
@@ -2527,14 +2527,14 @@ static void htcchg_vbus_adjust_worker(struct work_struct *work)
 			vbus_cnt++;
 			htc_batt_info.icharger->register_write(CMD_HVDCP_2_REG,
 							SINGLE_DECREMENT_BIT, SINGLE_DECREMENT_BIT);
-			schedule_delayed_work(&htc_batt_info.htcchg_vbus_adjust_work,
+			queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htcchg_vbus_adjust_work,
 							msecs_to_jiffies(HTCCHG_VBUS_ADJUST_PERIOD_MS));
 		}else{
 			pr_info("[CC][D+] VBUS is low, pull it, Vbus : %d, ISEN : %d\n", vbus_for_cc_check, ibat_for_cc_check);
 			vbus_cnt++;
 			htc_batt_info.icharger->register_write(CMD_HVDCP_2_REG,
 							SINGLE_INCREMENT_BIT, SINGLE_INCREMENT_BIT);
-			schedule_delayed_work(&htc_batt_info.htcchg_vbus_adjust_work,
+			queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htcchg_vbus_adjust_work,
 							msecs_to_jiffies(HTCCHG_VBUS_ADJUST_PERIOD_MS));
 		}
 	}
@@ -2583,7 +2583,7 @@ static void htcchg_init_worker(struct work_struct *work)
 			pr_info("[CC][init] VBus cannot adjust!\n");
 			htcchg_cc_leave();
 		} else
-			schedule_delayed_work(&htc_batt_info.htcchg_init_work,
+			queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htcchg_init_work,
 				msecs_to_jiffies(HTCCHG_INIT_PERIOD_MS));
 	} else {
 		init_cnt = 0;
@@ -2594,7 +2594,7 @@ static void htcchg_init_worker(struct work_struct *work)
 
 		// Lauch Vbus_adjust_worker to modify vbus until IBAT goal reach
 		pr_info("[CC] ========== Entry done, keep on the Vbus and IBAT checking==========\n");
-		schedule_delayed_work(&htc_batt_info.htcchg_vbus_adjust_work, msecs_to_jiffies(HTCCHG_VBUS_ADJUST_PERIOD_MS));
+		queue_delayed_work(system_power_efficient_wq, &htc_batt_info.htcchg_vbus_adjust_work, msecs_to_jiffies(HTCCHG_VBUS_ADJUST_PERIOD_MS));
 	}
 }
 
@@ -2700,7 +2700,7 @@ void htc_5v2a_pre_chk(void)
 		charger_register_write(USBIN_AICL_OPTIONS_CFG_REG, USBIN_AICL_EN_BIT, USBIN_AICL_EN_BIT);
 		set_usb_psy_property(POWER_SUPPLY_PROP_SDP_CURRENT_MAX, DCP_5V2A_CHARGE_CURR);
 		set_batt_psy_property(POWER_SUPPLY_PROP_RERUN_AICL, 1);
-		schedule_delayed_work(&htc_batt_info.iusb_5v_2a_ability_check_work,
+		queue_delayed_work(system_power_efficient_wq, &htc_batt_info.iusb_5v_2a_ability_check_work,
 				msecs_to_jiffies(ICL_ABILITY_CHECK_DELAY_MS));
 	}
 
@@ -2862,8 +2862,8 @@ static void batt_worker(struct work_struct *work)
 		}
 
 		if ((htc_batt_info.prev.charging_source == POWER_SUPPLY_TYPE_UNKNOWN) || (s_first)) {
-			schedule_delayed_work(&htc_batt_info.quick_charger_check_work, msecs_to_jiffies(20000));
-			schedule_delayed_work(&htc_batt_info.screen_ibat_limit_enable_work, msecs_to_jiffies(SCREEN_LIMIT_IBAT_DELAY_MS));
+			queue_delayed_work(system_power_efficient_wq, &htc_batt_info.quick_charger_check_work, msecs_to_jiffies(20000));
+			queue_delayed_work(system_power_efficient_wq, &htc_batt_info.screen_ibat_limit_enable_work, msecs_to_jiffies(SCREEN_LIMIT_IBAT_DELAY_MS));
 		}
 
 		if (htc_batt_info.rep.charging_source == POWER_SUPPLY_TYPE_USB_PD)
@@ -3066,7 +3066,7 @@ static void batt_worker(struct work_struct *work)
 			cancel_delayed_work_sync(&htc_batt_info.cable_impedance_work);
 		}else{
 			if (gs_measure_cable_impedance == true) {
-				schedule_delayed_work(&htc_batt_info.cable_impedance_work, msecs_to_jiffies(30000));
+				queue_delayed_work(system_power_efficient_wq, &htc_batt_info.cable_impedance_work, msecs_to_jiffies(30000));
 				gs_measure_cable_impedance = false;
 			}
 		}
@@ -3285,7 +3285,7 @@ static void chg_full_check_worker(struct work_struct *work)
 		return;
 	}
 
-	schedule_delayed_work(&htc_batt_info.chg_full_check_work,
+	queue_delayed_work(system_power_efficient_wq, &htc_batt_info.chg_full_check_work,
 							msecs_to_jiffies(CHG_FULL_CHECK_PERIOD_MS));
 
 }
@@ -3514,18 +3514,18 @@ void htc_battery_info_update(enum power_supply_property prop, int intval)
 				if (!delayed_work_pending(&htc_batt_info.chg_full_check_work)
 					&& (g_latest_chg_src > POWER_SUPPLY_TYPE_UNKNOWN)) {
 						__pm_stay_awake(htc_batt_info.charger_exist_lock);
-					schedule_delayed_work(&htc_batt_info.chg_full_check_work,0);
+					queue_delayed_work(system_power_efficient_wq, &htc_batt_info.chg_full_check_work,0);
 				} else {
 					if (delayed_work_pending(&htc_batt_info.chg_full_check_work)
 						&& (g_latest_chg_src == POWER_SUPPLY_TYPE_UNKNOWN)) {
 						BATT_LOG("cancel chg_full_check_work when plug out.\n");
 						cancel_delayed_work_sync(&htc_batt_info.chg_full_check_work);
-						schedule_delayed_work(&htc_batt_info.chg_full_check_work,0);
+						queue_delayed_work(system_power_efficient_wq, &htc_batt_info.chg_full_check_work,0);
  					}
 				}
 				if (!g_flag_keep_charge_on){
 					if(!delayed_work_pending(&htc_batt_info.is_usb_overheat_work)) {
-						schedule_delayed_work(&htc_batt_info.is_usb_overheat_work, 0);
+						queue_delayed_work(system_power_efficient_wq, &htc_batt_info.is_usb_overheat_work, 0);
 					}
 				}
 			}
