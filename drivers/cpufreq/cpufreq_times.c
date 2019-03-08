@@ -294,8 +294,6 @@ static int time_in_state_seq_show(struct seq_file *m, void *v)
 		}
 
 		for (i = 0; i < uid_entry->max_state; ++i) {
-			if (freq_index_invalid(i))
-				continue;
 			time = (u32)
 				cputime_to_clock_t(uid_entry->time_in_state[i]);
 			seq_write(m, &time, sizeof(time));
