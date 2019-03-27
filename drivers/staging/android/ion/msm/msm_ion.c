@@ -953,6 +953,7 @@ int msm_ion_heap_pages_zero(struct page **pages, int num_pages)
 
 		memset(ptr, 0, npages_to_vmap * PAGE_SIZE);
 		vunmap(ptr);
+		ptr = NULL;
 	}
 
 	return 0;
