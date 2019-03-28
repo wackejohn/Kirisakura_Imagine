@@ -115,8 +115,8 @@ void kgsl_dump_contextpid_locked(struct idr *context_idr)
 	struct kgsl_context *context;
 	struct task_struct *task;
 	struct task_struct *parent_task;
-	char task_name[TASK_COMM_LEN+1];
-	char task_parent_name[TASK_COMM_LEN+1];
+	char task_name[TASK_COMM_LEN];
+	char task_parent_name[TASK_COMM_LEN];
 	pid_t ppid;
 
 	printk(" == [KGSL] context maximal count is %lu, dump context id, pid, name, group leader name ==\n",KGSL_MEMSTORE_MAX);

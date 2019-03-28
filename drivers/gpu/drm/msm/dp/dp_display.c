@@ -1275,7 +1275,7 @@ static int dp_request_irq(struct dp_display *dp_display)
 	}
 
 	rc = devm_request_irq(&dp->pdev->dev, dp->irq, dp_display_irq,
-		IRQF_TRIGGER_HIGH, "dp_display_isr", dp);
+		IRQF_TRIGGER_HIGH | IRQF_PERF_CRITICAL, "dp_display_isr", dp);
 	if (rc < 0) {
 		pr_err("failed to request IRQ%u: %d\n",
 				dp->irq, rc);
