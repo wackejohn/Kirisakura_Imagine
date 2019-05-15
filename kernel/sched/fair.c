@@ -6250,6 +6250,12 @@ static inline bool task_fits_max(struct task_struct *p, int cpu)
 	return __task_fits(p, cpu, 0);
 }
 
+static inline bool cpu_check_overutil_condition(int cpu,
+						unsigned long util)
+{
+	return (capacity_orig_of(cpu) * 1024) < (util * capacity_margin);
+}
+
 bool __cpu_overutilized(int cpu, int delta)
 {
 	return (capacity_orig_of(cpu) * 1024) <
@@ -7102,7 +7108,7 @@ retry:
 			 * than the one required to boost the task.
 			 */
 			new_util = max(min_util, new_util);
-			if (new_util > capacity_orig)
+			if (cpu_check_overutil_condition(i, new_util))
 				continue;
 
 			/*
