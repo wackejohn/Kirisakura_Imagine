@@ -569,6 +569,10 @@ struct tas2557_priv {
 	spinlock_t irq_lock;
 /* HTC_AUD_END */
 
+/* HTC_AUD_START - Buffers to hold memory used for transfers */
+	unsigned char *nBuf1;
+	unsigned char *nBuf2;
+/* HTC_AUD_END */
 };
 
 #endif /* _TAS2557_H */

@@ -1125,6 +1125,11 @@ static int tas2557_i2c_probe(struct i2c_client *pClient,
 		goto err;
 	}
 
+/* HTC_AUD_START - Pre-allocate the buffers */
+	pTAS2557->nBuf1 = (unsigned char *)kmalloc(128 * sizeof(unsigned char), GFP_DMA | GFP_KERNEL);
+	pTAS2557->nBuf2 = (unsigned char *)kmalloc(128 * sizeof(unsigned char), GFP_DMA | GFP_KERNEL);
+/* HTC_AUD_END */
+
 	pTAS2557->client = pClient;
 	pTAS2557->dev = &pClient->dev;
 	i2c_set_clientdata(pClient, pTAS2557);
@@ -1329,6 +1334,11 @@ static int tas2557_i2c_remove(struct i2c_client *pClient)
 	struct tas2557_priv *pTAS2557 = i2c_get_clientdata(pClient);
 
 	dev_info(pTAS2557->dev, "%s\n", __func__);
+
+/* HTC_AUD_START */
+	kfree(pTAS2557->nBuf1);
+	kfree(pTAS2557->nBuf2);
+/* HTC_AUD_END */
 
 #ifdef CONFIG_TAS2557_CODEC_STEREO
 	tas2557_deregister_codec(pTAS2557);

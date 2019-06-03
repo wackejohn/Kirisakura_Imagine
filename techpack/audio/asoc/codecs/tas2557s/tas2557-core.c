@@ -422,7 +422,13 @@ int tas2557_get_die_temperature(struct tas2557_priv *pTAS2557, int *pTemperature
 	int nResult = 0;
 	struct TConfiguration *pConfiguration;
 	enum channel chl;
+/* HTC_AUD_START */
+#if 0
 	unsigned char nBuf[4];
+#else
+	unsigned char *nBuf = pTAS2557->nBuf1;
+#endif
+/* HTC_AUD_END */
 	int temp;
 
 	if (!pTAS2557->mpFirmware->mnConfigurations) {
@@ -445,6 +451,7 @@ int tas2557_get_die_temperature(struct tas2557_priv *pTAS2557, int *pTemperature
 		goto end;
 	}
 
+	memset(nBuf, 0, 4 * sizeof(unsigned char)); // HTC_AUD
 	nResult = pTAS2557->bulk_read(pTAS2557, chl, TAS2557_DIE_TEMP_REG, nBuf, 4);
 	if (nResult >= 0) {
 		temp = ((int)nBuf[0] << 24) | ((int)nBuf[1] << 16) | ((int)nBuf[2] << 8) | nBuf[3];
@@ -1860,10 +1867,22 @@ static int doMultiRegCheckSum(struct tas2557_priv *pTAS2557, enum channel chl,
 {
 	int nResult = 0, i;
 	unsigned char nCRCChkSum = 0;
+/* HTC_AUD_START */
+#if 0
 	unsigned char nBuf1[128];
 	unsigned char nBuf2[128];
+#else
+	unsigned char *nBuf1 = pTAS2557->nBuf1;
+	unsigned char *nBuf2 = pTAS2557->nBuf2;
+#endif
+/* HTC_AUD_END */
 	struct TYCRC TCRCData;
 	unsigned char *pRegVal;
+
+/* HTC_AUD_START */
+	memset(nBuf1, 0, 128 * sizeof(unsigned char));
+	memset(nBuf2, 0, 128 * sizeof(unsigned char));
+/* HTC_AUD_END */
 
 	if ((nReg + len-1) > 127) {
 		nResult = -EINVAL;
