@@ -645,7 +645,7 @@
 		secure_display_memory: secure_display_region { /* Secure UI */
 			compatible = "removed-dma-pool";
 			no-map;
-			reg = <0 0x97c00000 0x0 0x5c00000>;
+			reg = <0 0x97c00000 0x0 0xac00000>;
 		};
 
 		dump_mem: mem_dump_region {
