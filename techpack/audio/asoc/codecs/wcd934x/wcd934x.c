@@ -5474,36 +5474,6 @@ static void tavil_restore_iir_coeff(struct tavil_priv *tavil, int iir_idx,
 					  [WCD934X_CDC_REPEAT_WRITES_MAX]);
 }
 
-static void tavil_restore_iir_coeff(struct tavil_priv *tavil, int iir_idx,
-				int band_idx)
-{
-	u16 reg_add;
-	int no_of_reg = 0;
-
-	regmap_write(tavil->wcd9xxx->regmap,
-		(WCD934X_CDC_SIDETONE_IIR0_IIR_COEF_B1_CTL + 16 * iir_idx),
-		(band_idx * BAND_MAX * sizeof(uint32_t)) & 0x7F);
-
-	reg_add = WCD934X_CDC_SIDETONE_IIR0_IIR_COEF_B2_CTL + 16 * iir_idx;
-
-	if (tavil->intf_type != WCD9XXX_INTERFACE_TYPE_SLIMBUS)
-		return;
-	/*
-	 * Since wcd9xxx_slim_write_repeat() supports only maximum of 16
-	 * registers at a time, split total 20 writes(5 coefficients per
-	 * band and 4 writes per coefficient) into 16 and 4.
-	 */
-	no_of_reg = WCD934X_CDC_REPEAT_WRITES_MAX;
-	wcd9xxx_slim_write_repeat(tavil->wcd9xxx, reg_add, no_of_reg,
-			&tavil->sidetone_coeff_array[iir_idx][band_idx][0]);
-
-	no_of_reg = (WCD934X_CDC_SIDETONE_IIR_COEFF_MAX * 4) -
-						WCD934X_CDC_REPEAT_WRITES_MAX;
-	wcd9xxx_slim_write_repeat(tavil->wcd9xxx, reg_add, no_of_reg,
-			&tavil->sidetone_coeff_array[iir_idx][band_idx]
-					  [WCD934X_CDC_REPEAT_WRITES_MAX]);
-}
-
 static int tavil_iir_enable_audio_mixer_get(struct snd_kcontrol *kcontrol,
 					struct snd_ctl_elem_value *ucontrol)
 {
