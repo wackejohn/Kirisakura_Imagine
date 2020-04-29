@@ -52,11 +52,23 @@
 #define RELEASE_WAKELOCK_W_V		"release_wakelock_with_verification"
 #define RELEASE_WAKELOCK		"release_wakelock"
 #define START_IRQS_RECEIVED_CNT		"start_irqs_received_counter"
+#ifdef CONFIG_FPC_HTC_DISABLE_CHARGING
+#include <linux/power_supply.h>
+#include <linux/power/htc_battery.h>
+#endif //CONFIG_FPC_HTC_DISABLE_CHARGING
+#ifdef CONFIG_UCI
+#include <linux/uci/uci.h>
+#endif
+
+#define CONFIG_HTC_HAL_FOOTPRINT
 
 static const char * const pctl_names[] = {
 	"fpc1020_reset_reset",
 	"fpc1020_reset_active",
 	"fpc1020_irq_active",
+#ifdef CONFIG_FPC_HTC_ENABLE_POWER
+	"fpc1020_fp1v8_enable",
+#endif //CONFIG_FPC_HTC_ENABLE_POWER
 };
 
 struct vreg_config {
@@ -71,6 +83,11 @@ static const struct vreg_config vreg_conf[] = {
 	{ "vcc_spi", 1800000UL, 1800000UL, 10, },
 	{ "vdd_io", 1800000UL, 1800000UL, 6000, },
 };
+#ifdef CONFIG_FPC_HTC_ENABLE_DBG
+#include <linux/htc_flags.h>
+static bool hal_is_waiting_irq = false;
+static bool htc_enable_fpc_dbg = false;
+#endif //CONFIG_FPC_HTC_ENABLE_DBG
 
 struct fpc1020_data {
 	struct device *dev;
@@ -83,6 +100,9 @@ struct fpc1020_data {
 	int rst_gpio;
 	int nbr_irqs_received;
 	int nbr_irqs_received_counter_start;
+#ifdef CONFIG_FPC_HTC_ENABLE_POWER
+	int pwr_gpio;
+#endif //CONFIG_FPC_HTC_ENABLE_POWER
 	bool prepared;
 	atomic_t wakeup_enabled; /* Used both in ISR and non-ISR */
 };
@@ -101,7 +121,6 @@ static int vreg_setup(struct fpc1020_data *fpc1020, const char *name,
 		if (!memcmp(n, name, strlen(n)))
 			goto found;
 	}
-
 	dev_err(dev, "Regulator %s not found\n", name);
 
 	return -EINVAL;
@@ -134,6 +153,7 @@ found:
 		rc = regulator_enable(vreg);
 		if (rc) {
 			dev_err(dev, "error enabling %s: %d\n", name, rc);
+			regulator_put(vreg);
 			vreg = NULL;
 		}
 		fpc1020->vreg[i] = vreg;
@@ -143,6 +163,7 @@ found:
 				regulator_disable(vreg);
 				dev_dbg(dev, "disabled %s\n", name);
 			}
+			regulator_put(vreg);
 			fpc1020->vreg[i] = NULL;
 		}
 		rc = 0;
@@ -274,6 +295,7 @@ static int hw_reset(struct fpc1020_data *fpc1020)
 	usleep_range(RESET_HIGH_SLEEP2_MIN_US, RESET_HIGH_SLEEP2_MAX_US);
 
 	irq_gpio = gpio_get_value(fpc1020->irq_gpio);
+	dev_info(fpc1020->dev, "IRQ after reset %d\n", irq_gpio);
 
 exit:
 	return rc;
@@ -332,6 +354,12 @@ static int device_prepare(struct fpc1020_data *fpc1020, bool enable)
 
 		usleep_range(PWR_ON_SLEEP_MIN_US, PWR_ON_SLEEP_MAX_US);
 
+		/* As we can't control chip select here the other part of the
+		 * sensor driver eg. the TEE driver needs to do a _SOFT_ reset
+		 * on the sensor after power up to be sure that the sensor is
+		 * in a good state after power up. Okeyed by ASIC.
+		 */
+
 		(void)select_pin_ctl(fpc1020, "fpc1020_reset_active");
 	} else if (!enable && fpc1020->prepared) {
 		rc = 0;
@@ -347,7 +375,6 @@ exit_1:
 exit:
 		fpc1020->prepared = false;
 	}
-
 	mutex_unlock(&fpc1020->lock);
 
 	return rc;
@@ -457,12 +484,58 @@ static ssize_t irq_ack(struct device *dev,
 	const char *buf, size_t count)
 {
 	struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
+	long value;
+
+#ifdef CONFIG_FPC_HTC_ENABLE_DBG
+	if (!kstrtol(buf, 10, &value)) {
+	    hal_is_waiting_irq = (value == 0) ? true : false;
+	    if (htc_enable_fpc_dbg)
+	        dev_info(fpc1020->dev, "%s:%ld\n", __func__, value);
+	}
+#endif //CONFIG_FPC_HTC_ENABLE_DBG
 
 	dev_dbg(fpc1020->dev, "%s\n", __func__);
 
 	return count;
 }
 static DEVICE_ATTR(irq, 0600 | 0200, irq_get, irq_ack);
+
+#ifdef CONFIG_HTC_HAL_FOOTPRINT
+static ssize_t hal_footprint_set(struct device *dev,
+                                struct device_attribute *attribute,
+                                const char *buf, size_t count)
+{
+    static char footprint_str[128] = {0};
+
+    snprintf(footprint_str, sizeof(footprint_str), "%s",buf);
+    dev_info(dev, "[fp][HAL] %s\n",footprint_str);
+
+    return count;
+}
+static DEVICE_ATTR(hal_footprint, S_IWUSR, NULL, hal_footprint_set);
+#endif //CONFIG_HTC_HAL_FOOTPRINT
+
+#ifdef CONFIG_FPC_HTC_DISABLE_CHARGING
+/**
+ * sysfs node for disabling charging while capturing fp image
+ */
+static ssize_t fp_charger_control_set(struct device *dev,
+	struct device_attribute *attribute, const char *buf, size_t count)
+{
+    if (!strncmp(buf, "enable", strlen("enable"))) {
+        dev_info(dev, "%s:%s\n", __func__, buf);
+        htc_battery_charger_switch_internal(ENABLE_PWRSRC_FINGERPRINT);
+    } else if (!strncmp(buf, "disable", strlen("disable"))) {
+        dev_info(dev, "%s:%s\n", __func__, buf);
+        htc_battery_charger_switch_internal(DISABLE_PWRSRC_FINGERPRINT);
+    } else {
+        dev_err(dev, "%s: Wrong Parameter!!:%s\n", __func__, buf);
+        return -EINVAL;
+    }
+    return count;
+}
+static DEVICE_ATTR(fp_charger_control, S_IWUSR, NULL, fp_charger_control_set);
+#endif //CONFIG_FPC_HTC_DISABLE_CHARGING
 
 static struct attribute *attributes[] = {
 	&dev_attr_pinctl_set.attr,
@@ -473,6 +546,12 @@ static struct attribute *attributes[] = {
 	&dev_attr_handle_wakelock.attr,
 	&dev_attr_clk_enable.attr,
 	&dev_attr_irq.attr,
+#ifdef CONFIG_HTC_HAL_FOOTPRINT
+	&dev_attr_hal_footprint.attr,
+#endif //CONFIG_HTC_HAL_FOOTPRINT
+#ifdef CONFIG_FPC_HTC_DISABLE_CHARGING
+	&dev_attr_fp_charger_control.attr,
+#endif //CONFIG_FPC_HTC_DISABLE_CHARGING
 	NULL
 };
 
@@ -480,20 +559,61 @@ static const struct attribute_group attribute_group = {
 	.attrs = attributes,
 };
 
+#if 1
+extern void register_fp_wake(void);
+extern void register_fp_irq(void);
+#endif
 static irqreturn_t fpc1020_irq_handler(int irq, void *handle)
 {
 	struct fpc1020_data *fpc1020 = handle;
+#ifdef CONFIG_UCI
+//	int proximity = uci_get_sys_property_int_mm("proximity", 0, 0, 1);
+#endif
+#if 1
+	int wake_enabled = 0;
+	pr_info("%s irq...\n",__func__);
+#endif
 
+#ifdef CONFIG_FPC_HTC_ENABLE_DBG
+	if (htc_enable_fpc_dbg && hal_is_waiting_irq) {
+		dev_info(fpc1020->dev, "%s:%d\n", __func__, atomic_read(&fpc1020->wakeup_enabled));
+	}
+#endif //CONFIG_FPC_HTC_ENABLE_DBG
+	
 	pr_info("fpc1020 irq handler: %s\n", __func__);
 	mutex_lock(&fpc1020->lock);
 	if (atomic_read(&fpc1020->wakeup_enabled)) {
 		fpc1020->nbr_irqs_received++;
+#ifdef CONFIG_UCI
+//		if (!proximity)
+#endif
 		__pm_wakeup_event(&fpc1020->ttw_wl,
 					msecs_to_jiffies(FPC_TTW_HOLD_TIME));
+#if 1
+		wake_enabled = 1;
+#endif
 	}
 	mutex_unlock(&fpc1020->lock);
 
+#ifdef CONFIG_UCI
+//	if (!proximity)
+#endif
 	sysfs_notify(&fpc1020->dev->kobj, NULL, dev_attr_irq.attr.name);
+
+#if 1
+#ifdef CONFIG_UCI
+//	if (!proximity) 
+	{
+#endif
+	if (wake_enabled)
+		register_fp_wake();
+	else {
+		register_fp_irq();
+	}
+#ifdef CONFIG_UCI
+	}
+#endif
+#endif
 
 	return IRQ_HANDLED;
 }
@@ -529,25 +649,47 @@ static int fpc1020_probe(struct platform_device *pdev)
 	int rc = 0;
 	size_t i;
 	int irqf;
+	struct device_node *np = dev->of_node;
 	struct fpc1020_data *fpc1020 = devm_kzalloc(dev, sizeof(*fpc1020),
 			GFP_KERNEL);
 	if (!fpc1020) {
+		dev_err(dev,"failed to allocate memory for struct fpc1020_data\n");
 		rc = -ENOMEM;
 		goto exit;
 	}
 
-
 	fpc1020->dev = dev;
 	platform_set_drvdata(pdev, fpc1020);
 
+	if (!np) {
+		dev_err(dev, "no of node found\n");
+		rc = -EINVAL;
+		goto exit;
+	}
+
+#ifdef CONFIG_FPC_HTC_ENABLE_POWER
+	rc = fpc1020_request_named_gpio(fpc1020, "fpc,pmi_gpio_en",
+			&fpc1020->pwr_gpio);
+	if (rc) {
+		dev_err(fpc1020->dev,
+			"fpc1020_request_named_gpio fpc,pmi_gpio_en failed.\n");
+		goto exit;
+	}
+#endif //CONFIG_FPC_HTC_ENABLE_POWER
 	rc = fpc1020_request_named_gpio(fpc1020, "fpc,gpio_irq",
 			&fpc1020->irq_gpio);
-	if (rc)
+	if (rc) {
+		dev_err(fpc1020->dev,
+			"fpc1020_request_named_gpio fpc,gpio_irqfailed.\n");
 		goto exit;
+	}
 	rc = fpc1020_request_named_gpio(fpc1020, "fpc,gpio_rst",
 			&fpc1020->rst_gpio);
-	if (rc)
+	if (rc) {
+		dev_err(fpc1020->dev,
+			"fpc1020_request_named_gpio fpc,gpio_rst failed.\n");
 		goto exit;
+	}
 
 	fpc1020->fingerprint_pinctrl = devm_pinctrl_get(dev);
 	if (IS_ERR(fpc1020->fingerprint_pinctrl)) {
@@ -561,7 +703,6 @@ static int fpc1020_probe(struct platform_device *pdev)
 		rc = -EINVAL;
 		goto exit;
 	}
-
 	for (i = 0; i < ARRAY_SIZE(pctl_names); i++) {
 		const char *n = pctl_names[i];
 		struct pinctrl_state *state =
@@ -575,12 +716,26 @@ static int fpc1020_probe(struct platform_device *pdev)
 		fpc1020->pinctrl_state[i] = state;
 	}
 
+#ifdef CONFIG_FPC_HTC_ENABLE_POWER
+	rc = select_pin_ctl(fpc1020, "fpc1020_fp1v8_enable");
+	if (rc) {
+		dev_err(fpc1020->dev,
+			"select_pin_ctl fpc1020_fp1v8_enable failed.\n");
+		goto exit;
+	}
+#endif //CONFIG_FPC_HTC_ENABLE_POWER
 	rc = select_pin_ctl(fpc1020, "fpc1020_reset_reset");
-	if (rc)
+	if (rc) {
+		dev_err(fpc1020->dev,
+			"select_pin_ctl fpc1020_reset_reset failed.\n");
 		goto exit;
+	}
 	rc = select_pin_ctl(fpc1020, "fpc1020_irq_active");
-	if (rc)
+	if (rc) {
+		dev_err(fpc1020->dev,
+			"select_pin_ctl fpc1020_irq_active failed.\n");
 		goto exit;
+	}
 
 	atomic_set(&fpc1020->wakeup_enabled, 0);
 
@@ -618,9 +773,14 @@ static int fpc1020_probe(struct platform_device *pdev)
 		(void)device_prepare(fpc1020, true);
 	}
 
-	rc = hw_reset(fpc1020);
+	//rc = hw_reset(fpc1020);
 
 	dev_info(dev, "%s: ok\n", __func__);
+
+#ifdef CONFIG_FPC_HTC_ENABLE_DBG
+	if (get_radio_flag() & BIT(3))
+	    htc_enable_fpc_dbg = true;
+#endif //CONFIG_FPC_HTC_ENABLE_DBG
 
 exit:
 	return rc;
@@ -677,7 +837,6 @@ static void __exit fpc1020_exit(void)
 
 module_init(fpc1020_init);
 module_exit(fpc1020_exit);
-
 
 MODULE_DESCRIPTION("FPC1020 Fingerprint sensor device driver.");
 MODULE_LICENSE("GPL v2");
