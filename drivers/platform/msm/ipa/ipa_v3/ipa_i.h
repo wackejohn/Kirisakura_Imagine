@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -1076,6 +1076,7 @@ struct ipa3_nat_ipv6ct_common_mem {
  * @index_table_expansion_addr: index expansion table address
  * @public_ip_addr: ip address of nat table
  * @pdn_mem: pdn config table SW cache memory structure
+ * @is_tmp_mem_allocated: indicate if tmp mem has been allocated
  */
 struct ipa3_nat_mem {
 	struct ipa3_nat_ipv6ct_common_mem dev;
@@ -1083,6 +1084,7 @@ struct ipa3_nat_mem {
 	char *index_table_expansion_addr;
 	u32 public_ip_addr;
 	struct ipa_mem_buffer pdn_mem;
+	bool is_tmp_mem_allocated;
 };
 
 /**
@@ -2580,6 +2582,7 @@ void ipa3_enable_dcd(void);
 void ipa3_disable_prefetch(enum ipa_client_type client);
 int ipa3_alloc_common_event_ring(void);
 int ipa3_allocate_dma_task_for_gsi(void);
+bool ipa3_check_idr_if_freed(void *ptr);
 void ipa3_free_dma_task_for_gsi(void);
 int ipa3_set_clock_plan_from_pm(int idx);
 void __ipa_gsi_irq_rx_scedule_poll(struct ipa3_sys_context *sys);
