@@ -24,6 +24,7 @@
 #include <linux/vmalloc.h>
 #include <linux/module.h>
 #include <linux/random.h>
+#include <linux/kref.h>
 #include <linux/delay.h>
 #include <linux/version.h>
 #if KERNEL_VERSION(4, 11, 0) <= LINUX_VERSION_CODE
