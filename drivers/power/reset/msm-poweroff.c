@@ -71,7 +71,7 @@ static int download_mode = 1;
 static const int download_mode;
 #endif
 
-static int is_warm_reset = 0;
+static int is_warm_reset = 1;
 
 #ifdef CONFIG_QCOM_DLOAD_MODE
 #define EDL_MODE_PROP "qcom,msm-imem-emergency_download_mode"
