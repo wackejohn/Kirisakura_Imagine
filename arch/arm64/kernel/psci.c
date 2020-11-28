@@ -83,7 +83,6 @@ static int cpu_psci_cpu_disable(unsigned int cpu)
 
 static void cpu_psci_cpu_die(unsigned int cpu)
 {
-	int ret;
 	/*
 	 * There are no known implementations of PSCI actually using the
 	 * power state field, pass a sensible default for now.
@@ -96,14 +95,12 @@ static void cpu_psci_cpu_die(unsigned int cpu)
 	set_cpu_foot_print(cpu, 0x1);
 #endif
 
-	ret = psci_ops.cpu_off(state);
+	psci_ops.cpu_off(state);
 
 #ifdef CONFIG_HTC_DEBUG_FOOTPRINT
 	init_cpu_foot_print(cpu, false, true);
 	set_cpu_foot_print(cpu, 0xfe);
 #endif
-
-	pr_crit("unable to power off CPU%u (%d)\n", cpu, ret);
 }
 
 static int cpu_psci_cpu_kill(unsigned int cpu)
