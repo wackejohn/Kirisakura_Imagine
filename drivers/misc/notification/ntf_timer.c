@@ -233,12 +233,10 @@ static int uci_get_flash_only_face_down(void) {
 }
 
 //static bool face_down = false;
-//static bool proximity = false;
 //static bool silent = false;
 //static bool ringing = false;
 
 extern bool ntf_face_down;
-extern bool ntf_proximity;
 extern bool ntf_silent;
 extern bool ntf_ringing;
 

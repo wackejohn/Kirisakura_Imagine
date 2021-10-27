@@ -2044,12 +2044,12 @@ static void squeeze_peekmode(struct work_struct * squeeze_peekmode_work) {
 	}
 	if (kad_running && !kad_running_for_kcal_only && !kad_running_for_aod_gesture) {
 		int count = smart_get_kad_halfseconds() * 4;
-		while (!interrupt_kad_peekmode_wait && !count--<=0) {
+		while (!interrupt_kad_peekmode_wait && !(count--<=0)) {
 			msleep(125);
 		}
 	} else {
 		int count = get_squeeze_peek_halfseconds() * 4;
-		while (!interrupt_kad_peekmode_wait && !count--<=0) {
+		while (!interrupt_kad_peekmode_wait && !(count--<=0)) {
 			msleep(125);
 		}
 	}
