@@ -1,7 +1,7 @@
 VERSION = 4
 PATCHLEVEL = 9
-SUBLEVEL = 249
-EXTRAVERSION = -rc1
+SUBLEVEL = 254
+EXTRAVERSION = 
 NAME = Roaring Lionus
 
 # *DOCUMENTATION*
@@ -353,7 +353,7 @@ OBJDUMP		= $(CROSS_COMPILE)objdump
 AWK		= awk
 GENKSYMS	= scripts/genksyms/genksyms
 INSTALLKERNEL  := installkernel
-DEPMOD		= /sbin/depmod
+DEPMOD		= depmod
 PERL		= perl
 PYTHON		= python
 CHECK		= sparse
