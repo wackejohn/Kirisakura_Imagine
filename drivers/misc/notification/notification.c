@@ -56,6 +56,8 @@ struct notifier_block *uci_ntf_msm_drm_notif;
 
 bool ntf_face_down = false;
 EXPORT_SYMBOL(ntf_face_down);
+bool ntf_proximity = false;
+EXPORT_SYMBOL(ntf_proximity);
 bool ntf_silent = false;
 EXPORT_SYMBOL(ntf_silent);
 bool ntf_ringing = false;
@@ -417,6 +419,7 @@ static void uci_sys_listener(void) {
         pr_info("%s [CLEANSLATE] sys listener... \n",__func__);
         {
                 bool ringing_new = !!uci_get_sys_property_int_mm("ringing", 0, 0, 1);
+                bool proximity_new = !!uci_get_sys_property_int_mm("proximity", 0, 0, 1);
                 bool locked_new = !!uci_get_sys_property_int_mm("locked", 0, 0, 1);
                 bool in_call = !!uci_get_sys_property_int_mm("in_call", 0, 0, 1);
                 ntf_face_down = !!uci_get_sys_property_int_mm("face_down", 0, 0, 1);
@@ -425,6 +428,10 @@ static void uci_sys_listener(void) {
 		if (in_call != ntf_in_call) {
 			ntf_in_call = in_call;
 			ntf_notify_listeners(NTF_EVENT_IN_CALL, ntf_in_call?1:0, "");
+		}
+		if (proximity_new != ntf_proximity) {
+			ntf_proximity = proximity_new;
+			ntf_notify_listeners(NTF_EVENT_PROXIMITY, ntf_proximity?1:0, "");
 		}
 		if (locked_new != ntf_locked) {
 			ntf_locked = locked_new;
@@ -441,6 +448,7 @@ static void uci_sys_listener(void) {
                 ntf_ringing = ringing_new;
 
                 pr_info("%s uci sys face_down %d\n",__func__,ntf_face_down);
+                pr_info("%s uci sys proximity %d\n",__func__,ntf_proximity);
                 pr_info("%s uci sys silent %d\n",__func__,ntf_silent);
                 pr_info("%s uci sys ringing %d\n",__func__,ntf_ringing);
         }
