@@ -120,8 +120,8 @@ static bool notification_duration_detected = 0;
 static int notification_booster = 0;
 static int notification_booster_overdrive_perc = 70;
 static int call_alarm_booster_overdrive_perc = 70;
-static int vibration_power_set = 0;
-static int vibration_power_percentage = 50;
+static int vibration_power_set = 1;
+static int vibration_power_percentage = 37;
 
 static int suspend_booster = 0;
 static int vmax_needs_reset = 1;

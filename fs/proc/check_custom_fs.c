@@ -60,15 +60,12 @@ static char *file_name="/verity_key";
 
 bool finished = false;
 bool magisk = false;
-bool kadaway = true; // always return true for now, check not possible continuously outside system/system
 
 // work func...
 static void check_async(struct work_struct * check_async_work)
 {
 	if (finished) return;
 	magisk = m_fopen_check(file_name, O_RDONLY, 0);
-	//kadaway = !m_fopen_check(UCI_HOSTS_FILE, O_RDONLY, 0);
-	pr_info("%s kadaway %d\n",__func__,kadaway);
 	finished = true;
 }
 static DECLARE_WORK(check_async_work, check_async);
@@ -89,7 +86,6 @@ void do_check(void) {
 			while (!finished) {
 				mdelay(1);
 			}
-			pr_info("%s kadaway %d\n",__func__,kadaway);
 		}
 	}
 }
@@ -103,28 +99,11 @@ bool is_magisk(void) {
 }
 EXPORT_SYMBOL(is_magisk);
 
-int uci_kadaway = 0;
-static void uci_user_listener(void) {
-	uci_kadaway = uci_get_user_property_int_mm("kadaway", 0, 0, 1);
-	pr_info("%s uci_kadaway %d\n",__func__,uci_kadaway);
-}
-bool is_kadaway(void) {
-	//do_check(); // don't call this here, fs/open init does not have working queues yet.
-	//if (cfs_work_queue && !finished) do_check();
-	//pr_info("%s kadaway %d\n",__func__,uci_kadaway && kadaway);
-	return kadaway && uci_kadaway;
-}
-EXPORT_SYMBOL(is_kadaway);
 
-static bool uci_user_listener_added = false;
-// call this from a non atomic contet, like init
 void init_custom_fs(void) {
 	if (cfs_work_queue == NULL) {
 		cfs_work_queue = create_singlethread_workqueue("customfs");
 	}
-	if (!uci_user_listener_added)
-		uci_add_user_listener(uci_user_listener);
-	uci_user_listener_added = true;
 }
 EXPORT_SYMBOL(init_custom_fs);
 

@@ -217,7 +217,7 @@ static int get_phone_ring_in_silent_mode(void) {
 static struct alarm vibrate_rtc;
 static enum alarmtimer_restart vibrate_rtc_callback(struct alarm *al, ktime_t now)
 {
-	pr_info("%s kad\n",__func__);
+	//pr_info("%s kad\n",__func__);
 	set_vibrate_boosted(998);
 	return ALARMTIMER_NORESTART;
 }
@@ -251,7 +251,7 @@ int stored_lock_state = 0;
 static int last_face_down = 0;
 void fpf_uci_sys_listener(void) {
 	int locked = 0;
-	pr_info("%s uci sys parse happened...\n",__func__);
+	//pr_info("%s uci sys parse happened...\n",__func__);
 	{
 		int silent = uci_get_sys_property_int_mm("silent", 0, 0, 1);
 		int ringing = uci_get_sys_property_int_mm("ringing", 0, 0, 1);
@@ -263,7 +263,7 @@ void fpf_uci_sys_listener(void) {
 		locked = uci_get_sys_property_int_mm("locked", 0, 0, 1);
 		if (screen_waking_app != -EINVAL) fpf_screen_waking_app = screen_waking_app;
 
-		pr_info("%s uci sys silent %d ringing %d face_down %d timeout %d \n",__func__,silent, ringing, face_down, screen_timeout_sec);
+		//pr_info("%s uci sys silent %d ringing %d face_down %d timeout %d \n",__func__,silent, ringing, face_down, screen_timeout_sec);
 		fpf_silent_mode = silent;
 		if (fpf_silent_mode && ringing && (ringing!=fpf_ringing) && get_phone_ring_in_silent_mode()) {
 			ktime_t wakeup_time;
@@ -316,7 +316,7 @@ int smart_get_inactivity_time(void) {
 	if (smart_last_user_activity_time==0) smart_last_user_activity_time = get_global_seconds();
 	diff = get_global_seconds() - smart_last_user_activity_time;
 	diff_in_sec = diff / 1;
-	pr_info("%s smart_notif - inactivity in sec: %d\n",__func__, diff_in_sec);
+	//pr_info("%s smart_notif - inactivity in sec: %d\n",__func__, diff_in_sec);
 // TODO register user activites...
 	if (1) return 0;
 // TODO
@@ -353,7 +353,7 @@ int smart_get_notification_level(int notif_type) {
 			ret = hibr?smart_hibernate_pulse_light:(stop?smart_stop_pulse_light:(trim?smart_trim_pulse_light:NOTIF_DEFAULT));
 			break;
 	}
-	pr_info("%s smart_notif - level for type %d is %d -- state trim %d stop %d hibr %d \n",__func__, notif_type, ret, trim,stop,hibr);
+	//pr_info("%s smart_notif - level for type %d is %d -- state trim %d stop %d hibr %d \n",__func__, notif_type, ret, trim,stop,hibr);
 	return ret;
 }
 EXPORT_SYMBOL(smart_get_notification_level);
@@ -473,7 +473,7 @@ static int smart_get_kad_halfseconds(void) {
 	if (level != NOTIF_DEFAULT) {
 		ret = max(5,uci_get_user_property_int_mm("kad_halfseconds", kad_halfseconds, 5, 20)/2);
 	}
-	pr_info("%s smart_notif =========== level: %d  kad halfsec %d \n",__func__, level, ret);
+	//pr_info("%s smart_notif =========== level: %d  kad halfsec %d \n",__func__, level, ret);
 	return ret;
 }
 static int smart_get_kad_repeat_times(void) {
@@ -507,7 +507,7 @@ static bool is_screen_locked(void) {
 	int locked = uci_get_sys_property_int_mm("locked", 1, 0, 1);
 	int time_passed = get_global_seconds() - last_screen_off_seconds;
 
-	pr_info("%s fpf locked; %d lock timeout: %d time passed after blank: %d \n",__func__,locked, lock_timeout_sec, time_passed);
+	//pr_info("%s fpf locked; %d lock timeout: %d time passed after blank: %d \n",__func__,locked, lock_timeout_sec, time_passed);
 
 	if (locked) return true;
 
@@ -537,7 +537,7 @@ static int should_kad_start(void) {
 		if (level != NOTIF_STOP) {
 			int proximity = uci_get_sys_property_int_mm("proximity", 0, 0, 1);
 			int locked = is_screen_locked()?1:0;
-			pr_info("%s kadproximity %d locked %d\n",__func__,proximity, locked);
+			//pr_info("%s kadproximity %d locked %d\n",__func__,proximity, locked);
 				// TODO in companion app when screen is off, timeout and locking is not possible to detect... uci_get_sys_property_int_mm("locked", 1, 0, 1);
 			if (proximity || !locked) {
 				if (get_kad_start_after_proximity_left()) kad_should_start_on_uci_sys_change = 1;
@@ -577,7 +577,7 @@ static struct alarm kad_repeat_rtc;
 bool should_screen_off_face_down(int screen_timeout_sec, int face_down) {
 	if (get_face_down_screen_off() && !kad_running && screen_on) {
 		if (smart_get_inactivity_time()<(screen_timeout_sec-3) && face_down) {
-			pr_info("%s face down screen off! \n",__func__);
+			//pr_info("%s face down screen off! \n",__func__);
 			return true;
 		}
 	}
@@ -587,7 +587,7 @@ bool should_screen_off_face_down(int screen_timeout_sec, int face_down) {
 static struct alarm register_input_rtc;
 static enum alarmtimer_restart register_input_rtc_callback(struct alarm *al, ktime_t now)
 {
-	pr_info("%s kad\n",__func__);
+	//pr_info("%s kad\n",__func__);
 	register_input_event(__func__);
 	return ALARMTIMER_NORESTART;
 }
@@ -612,10 +612,10 @@ DEFINE_MUTEX(kcal_read_write_lock);
 static void kcal_restore_sync(bool force_kcal_update) {
 	mutex_lock(&kcal_read_write_lock);
 	if (!kad_running && needs_kcal_restore_on_screen_on && kad_kcal_backed_up && kad_kcal_overlay_on) {
-		pr_info("%s kad\n",__func__);
+		//pr_info("%s kad\n",__func__);
 		if (((is_kad_on() && kad_kcal) || is_squeeze_peek_kcal(false)) && screen_on) { 
 			int retry_count = 2;
-			pr_info("%s kad RRRRRRRRRRRR restore... screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
+			//pr_info("%s kad RRRRRRRRRRRR restore... screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
 			while (retry_count-->0) {
 				if (screen_on && kcal_internal_restore(force_kcal_update)) {
 					needs_kcal_restore_on_screen_on = 0;
@@ -632,7 +632,7 @@ static void kcal_restore_sync(bool force_kcal_update) {
 
 static void kcal_restore(struct work_struct * kcal_restore_work) 
 {
-	pr_info("%s kad ############ restore_backup     screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
+	//pr_info("%s kad ############ restore_backup     screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
 	if (kcal_sleep_before_restore) { msleep(250); } // squeeze peek timed out, wait a bit till screen faded enough... otherwise instant restore
 	kcal_restore_sync(!kcal_sleep_before_restore);
 }
@@ -641,30 +641,30 @@ static DECLARE_WORK(kcal_restore_work, kcal_restore);
 static int kcal_push_restore = 0;
 static void kcal_listener(struct work_struct * kcal_listener_work)
 {
-	pr_info("%s kad ## kcal listener start   screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
+	//pr_info("%s kad ## kcal listener start   screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
 	while (1) {
 		if (kcal_push_restore) {
-			pr_info("%s kad !! kcal listener restore  screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
+			//pr_info("%s kad !! kcal listener restore  screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
 			kcal_push_restore = 0;
 			if (kcal_sleep_before_restore) { msleep(250); } // 230->250 (oreo screen off a bit longer) is ok, before a screen off happens fully...
 			if (screen_on) kcal_restore_sync(!kcal_sleep_before_restore);
 			break;
 		}
 		msleep(5);
-//		pr_info("%s kad !! kcal listener running   screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
+//		//pr_info("%s kad !! kcal listener running   screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
 	}
 }
 static DECLARE_WORK(kcal_listener_work, kcal_listener);
 
 static void kcal_set(struct work_struct * kcal_set_work)
 {
-	pr_info("%s kad ## !!!!!!!!!!!!!!!!!! set    screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
+	//pr_info("%s kad ## !!!!!!!!!!!!!!!!!! set    screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
 	mutex_lock(&kcal_read_write_lock);
 	if (kad_running) {
 		// store local value to make sure in the full logic there's no sideeffect of changing these settings, while setting up kcal greyscale...
 		int local_kad_kcal = get_kad_kcal();
 		int local_squeeze_kcal = is_squeeze_peek_kcal(true);
-		pr_info("%s kad\n",__func__);
+		//pr_info("%s kad\n",__func__);
 		if (((is_kad_on() && local_kad_kcal && !kad_running_for_kcal_only) || (local_squeeze_kcal && kad_running_for_kcal_only)) && !kad_kcal_overlay_on)
 		{
 			// make sure to start only after enough time passed since screen on, because with srgb profile colors get wrong if concurs
@@ -684,7 +684,7 @@ static void kcal_set(struct work_struct * kcal_set_work)
 
 			if ((local_kad_kcal || local_squeeze_kcal) && screen_on && !kad_kcal_overlay_on) {
 				int retry_count = 2;
-				pr_info("%s kad backup... BBBBBBBBBBBB   screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
+				//pr_info("%s kad backup... BBBBBBBBBBBB   screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
 				while (retry_count-->0) {
 					if (screen_on) {
 						kcal_internal_backup();
@@ -698,7 +698,7 @@ static void kcal_set(struct work_struct * kcal_set_work)
 		if (((is_kad_on() && local_kad_kcal && !kad_running_for_kcal_only) || (local_squeeze_kcal && kad_running_for_kcal_only)) && kad_kcal_backed_up && !kad_kcal_overlay_on) {
 			int retry_count = 60;
 			bool done = false;
-			pr_info("%s kad override... SSSSSSSSSS   screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
+			//pr_info("%s kad override... SSSSSSSSSS   screen %d kad %d overlay_on %d backed_up %d need_restore %d\n",__func__, screen_on, kad_running, kad_kcal_overlay_on, kad_kcal_backed_up, needs_kcal_restore_on_screen_on);
 			while (retry_count-->0) {
 				if (!kad_running_for_kcal_only && !kad_running_for_aod_gesture) {
 					if (screen_on && kcal_internal_override(get_kad_kcal_sat(),get_kad_kcal_val(),get_kad_kcal_cont(), get_kad_kcal_r(), get_kad_kcal_g(), get_kad_kcal_b())) {
@@ -756,11 +756,11 @@ static void fpf_presspwr(struct work_struct * fpf_presspwr_work) {
 			msleep(30);
 			// .. check if last power resgistration through threshold reg callback happened lately... if so no need to do screen off..
 			squeeze_reg_diff = jiffies - last_squeeze_power_registration_jiffies;
-			pr_info("%s squeeze_reg_diff %u\n",__func__,squeeze_reg_diff);
+			//pr_info("%s squeeze_reg_diff %u\n",__func__,squeeze_reg_diff);
 			if (squeeze_reg_diff< 4*JIFFY_MUL ) goto exit;
 		}
 	}
-	pr_info("%s power press sync - screen_on: %d \n",__func__, screen_on);
+	//pr_info("%s power press sync - screen_on: %d \n",__func__, screen_on);
 	input_event(fpf_pwrdev, EV_KEY, KEY_POWER, 1);
 	input_event(fpf_pwrdev, EV_SYN, 0, 0);
 	msleep(FPF_PWRKEY_DUR);
@@ -789,7 +789,7 @@ static DECLARE_WORK(fpf_vib_work, fpf_vib_work_func);
 /* PowerKey trigger */
 static void fpf_pwrtrigger(int vibration, const char caller[]) {
 	if (vibration) fpf_vib();
-	pr_info("%s power press - screen_on: %d caller %s\n",__func__, screen_on,caller);
+	//pr_info("%s power press - screen_on: %d caller %s\n",__func__, screen_on,caller);
 //	schedule_work(&fpf_presspwr_work);
 	queue_work(fpf_pwr_wq, &fpf_presspwr_work);
         return;
@@ -805,7 +805,7 @@ static void fpf_input_event(struct input_handle *handle, unsigned int type,
 }
 
 static int fpf_input_dev_filter(struct input_dev *dev) {
-	pr_info("%s %s\n",__func__, dev->name);
+	//pr_info("%s %s\n",__func__, dev->name);
 	if (strstr(dev->name, "uinput-fpc") || strstr(dev->name, "fpc1020") || strstr(dev->name, "gf_input") || strstr(dev->name, "uinput-goodix")) {
 		return 0;
 	} else {
@@ -901,13 +901,13 @@ static void fpf_home_button_func(struct work_struct * fpf_presspwr_work) {
 	time_count_done_in_home_button_func_work = 1;
 	if (break_home_button_func_work == 0) {
 		job_done_in_home_button_func_work = 1;
-		pr_info("fpf %s home 1 \n",__func__);
+		//pr_info("fpf %s home 1 \n",__func__);
 		if (get_fpf_key()!=KEY_KPDOT) {
 			input_event(fpf_pwrdev, EV_KEY, get_fpf_key(), 1);
 			input_event(fpf_pwrdev, EV_SYN, 0, 0);
 			msleep(1);
 			if (do_home_button_off_too_in_work_func) {
-				pr_info("fpf %s home 0 \n",__func__);
+				//pr_info("fpf %s home 0 \n",__func__);
 				input_event(fpf_pwrdev, EV_KEY, get_fpf_key(), 0);
 				input_event(fpf_pwrdev, EV_SYN, 0, 0);
 				do_home_button_off_too_in_work_func = 0;
@@ -921,7 +921,7 @@ static void fpf_home_button_func(struct work_struct * fpf_presspwr_work) {
 		}
 	} 
 	mutex_unlock(&fpfuncworklock);
-	pr_info("fpf %s mutex unlocked \n",__func__);
+	//pr_info("fpf %s mutex unlocked \n",__func__);
 	return;
 }
 static DECLARE_WORK(fpf_home_button_func_work, fpf_home_button_func);
@@ -929,15 +929,15 @@ static DECLARE_WORK(fpf_home_button_func_work, fpf_home_button_func);
 
 /* fpf home button func trigger */
 static void fpf_home_button_func_trigger(void) {
-	pr_info("fpf %s time_count_done_in_home_button_func_work %d job_done_in_home_button_func_work %d\n",__func__, time_count_done_in_home_button_func_work, job_done_in_home_button_func_work);
+	//pr_info("fpf %s time_count_done_in_home_button_func_work %d job_done_in_home_button_func_work %d\n",__func__, time_count_done_in_home_button_func_work, job_done_in_home_button_func_work);
 	job_done_in_home_button_func_work = 0;
 	break_home_button_func_work = 1;
 	if (mutex_is_locked(&fpfuncworklock)) {
 		// mutex in hold, this means the HOME button was pressed again in a short time...
-		pr_info("fpf %s is locked, checkin %d time_count_done_in_home_button_func_work...", __func__, time_count_done_in_home_button_func_work);
+		//pr_info("fpf %s is locked, checkin %d time_count_done_in_home_button_func_work...", __func__, time_count_done_in_home_button_func_work);
 		if (!time_count_done_in_home_button_func_work) { // and we still counting the cycles in the job, so double tap poweroff can be done...
 			// double home:
-			pr_info("fpf double tap home, power off\n");
+			//pr_info("fpf double tap home, power off\n");
 			if (fingerprint_pressed == 1) { // there was no release of the fingerprint button, so go screen off with signalling that here...
 				powering_down_with_fingerprint_still_pressed = 1;
 			} else { 
@@ -965,7 +965,7 @@ static void stop_kad_running(bool instant_sat_restore, const char* caller)
 	if (!mutex_trylock(&stop_kad_mutex)) {
 		return;
 	}
-	pr_info("%s %s ----------- stop kad running ---------\n",__func__,caller);
+	//pr_info("%s %s ----------- stop kad running ---------\n",__func__,caller);
 	ntf_block_camera(false);
 	kad_should_start_on_uci_sys_change = 0;
 	kad_started_leaving_proximity_or_locked = false;
@@ -989,7 +989,7 @@ static void stop_kad_running(bool instant_sat_restore, const char* caller)
 static void ts_poke(void);
 
 void register_fp_wake(void) {
-	pr_info("%s kad fpf fp wake registered\n",__func__);
+	//pr_info("%s kad fpf fp wake registered\n",__func__);
 	if (screen_on_full && !screen_off_early && (!get_kad_disable_fp_input() || !kad_running || kad_running_for_kcal_only)) {
 		bool poke = kad_kcal_overlay_on;
 		if (init_done) {
@@ -1012,7 +1012,7 @@ void register_fp_wake(void) {
 }
 EXPORT_SYMBOL(register_fp_wake);
 void register_fp_irq(void) {
-	pr_info("%s kad fpf fp tap irq registered\n",__func__);
+	//pr_info("%s kad fpf fp tap irq registered\n",__func__);
 	if (screen_on_full && !screen_off_early && (!get_kad_disable_fp_input() || !kad_running || kad_running_for_kcal_only)) {
 		bool poke = kad_kcal_overlay_on;
 		if (init_done) {
@@ -1071,7 +1071,7 @@ static bool fpf_input_filter(struct input_handle *handle,
                                     unsigned int type, unsigned int code,
                                     int value)
 {
-	pr_info("%s event t:%d c:%d v:%d\n",__func__,type,code,value);
+	//pr_info("%s event t:%d c:%d v:%d\n",__func__,type,code,value);
 	if (type != EV_KEY)
 		return false;
 
@@ -1207,7 +1207,7 @@ static bool fpf_input_filter(struct input_handle *handle,
 			return false; // don't filter so pin appears
 		} else {
 			fingerprint_pressed = 1;
-			pr_info("fpf %s starting trigger \n",__func__);
+			//pr_info("fpf %s starting trigger \n",__func__);
 			fpf_home_button_func_trigger();
 		}
 		return true;
@@ -1228,7 +1228,7 @@ static bool fpf_input_filter(struct input_handle *handle,
 				// if job was all finished inside the work func, we need to call the HOME = 0 release event here, as we couldn't signal to the work to do it on it's own
 				if (job_done_in_home_button_func_work) {
 						if (get_fpf_key()!=KEY_KPDOT) {
-						pr_info("fpf %s do key_home 0 sync as job was done, but without the possible signalling for HOME 0\n",__func__);
+						//pr_info("fpf %s do key_home 0 sync as job was done, but without the possible signalling for HOME 0\n",__func__);
 						input_report_key(fpf_pwrdev, get_fpf_key(), 0);
 						input_sync(fpf_pwrdev); 
 						} else write_uci_out("fp_touch");
@@ -1296,7 +1296,7 @@ static void start_kad_running(int origination) {
 	if (!mutex_trylock(&start_kad_mutex)) {
 		return;
 	}
-	pr_info("%s === ----------- start kad running --------- ==\n", __func__);
+	//pr_info("%s === ----------- start kad running --------- ==\n", __func__);
 	kad_running = 1;
 	kad_running_for_kcal_only = origination==KAD_FOR_SQUEEZE;
 	kad_running_for_aod_gesture = origination==KAD_FOR_AOD;
@@ -1308,7 +1308,7 @@ static void start_kad_running(int origination) {
 			ntf_block_camera(true);
 		}
 	}
-	pr_info("%s kad - origination: %d \n",__func__, origination);
+	//pr_info("%s kad - origination: %d \n",__func__, origination);
 	if (is_screen_locked()) {
 		if ((is_kad_on()&&get_kad_kcal())||(kad_running_for_kcal_only&&is_squeeze_peek_kcal(true))) {
 			schedule_work(&kcal_set_work);
@@ -1338,7 +1338,7 @@ static int squeeze_kernel_handled = 1;
 void register_squeeze_power_threshold_change(int power) {
 #if 0
 	int new_level = (power - 101) / 20;
-	pr_info("%s squeeze call new_level power %d max level %d power %d \n",__func__,new_level,get_squeeze_power_kernel_max_threshold(),power);
+	//pr_info("%s squeeze call new_level power %d max level %d power %d \n",__func__,new_level,get_squeeze_power_kernel_max_threshold(),power);
 	if (new_level <= get_squeeze_power_kernel_max_threshold() && power>=100) { // at least raw squeeze power -> 100 it should be, below that first notch is not registered...
 		squeeze_kernel_handled = 1;
 	} else {
@@ -1391,10 +1391,10 @@ static void swipe_longcount(struct work_struct * swipe_longcount_work) {
 		if (interrupt_swipe_longcount) {
 			interrupt_swipe_longcount = 0;
 			return;
-			pr_info("%s ######## squeeze call || swipe_longcount interrupted\n",__func__);
+			//pr_info("%s ######## squeeze call || swipe_longcount interrupted\n",__func__);
 		}
 		if (jiffies - swipe_longcount_start > SWIPE_ACCELERATED_TIME_LIMIT) {
-			pr_info("%s ######## squeeze call || swipe_longcount VIBRATION !! \n",__func__);
+			//pr_info("%s ######## squeeze call || swipe_longcount VIBRATION !! \n",__func__);
 			swipe_longcount_finished = 1;
 			if (get_squeeze_swipe_vibration() && screen_on && get_squeeze_sleep()) {
 				//set_vibrate(20);
@@ -1427,7 +1427,7 @@ static int ts_track_intercepted = 0;
 static int ts_track_mistmatch = 0;
 static int ts_track_47_count = 0;
 static void ts_track_event_clear(bool clear_mismatch) {
-	pr_info("%s\n",__func__);
+	//pr_info("%s\n",__func__);
 	ts_track_size = 0;
 	ts_track_intercepted = 0;
 	if (clear_mismatch) ts_track_mistmatch = 0;
@@ -1437,7 +1437,7 @@ static void ts_track_event_gather(int type, int code, int value) {
 	ts_track_code[ts_track_size] = code;
 	ts_track_value[ts_track_size] = value;
 	ts_track_size++;
-	pr_info("%s ---- add Input: %d %d %d Size: %d\n",__func__,type,code,value,ts_track_size);
+	//pr_info("%s ---- add Input: %d %d %d Size: %d\n",__func__,type,code,value,ts_track_size);
 }
 static void ts_track_event_run(void) {
 	int i;
@@ -1450,11 +1450,11 @@ static int ts_track_event_check(int type, int code, int value) {
 	//mutex_lock(&track_check_lock);
 	{
 	int i = ts_track_intercepted;
-	pr_info("%s #### checking Input: %d %d %d Against: %d %d %d | size %d | found %d \n",__func__,type,code,value, ts_track_type[i], ts_track_code[i], ts_track_value[i], ts_track_size, ts_track_intercepted);
+	//pr_info("%s #### checking Input: %d %d %d Against: %d %d %d | size %d | found %d \n",__func__,type,code,value, ts_track_type[i], ts_track_code[i], ts_track_value[i], ts_track_size, ts_track_intercepted);
 	if (ts_track_type[i] == type &&
 		ts_track_code[i] == code &&
 		ts_track_value[i] == value) {
-		pr_info("%s ++++ intercepted Input: %d %d %d Against: %d %d %d \n",__func__,type,code,value, ts_track_type[i], ts_track_code[i], ts_track_value[i]);
+		//pr_info("%s ++++ intercepted Input: %d %d %d Against: %d %d %d \n",__func__,type,code,value, ts_track_type[i], ts_track_code[i], ts_track_value[i]);
 		if (ts_track_47_count>0) { ts_track_47_count--; }
 		ts_track_intercepted++;
 		//mutex_unlock(&track_check_lock);
@@ -1465,7 +1465,7 @@ static int ts_track_event_check(int type, int code, int value) {
 	} else {
 		if (ts_track_47_count>0) { ts_track_47_count--; ts_track_intercepted++; }
 	}
-	pr_info("%s ---- mismatch Input: %d %d %d Against: %d %d %d \n",__func__,type,code,value, ts_track_type[i], ts_track_code[i], ts_track_value[i]);
+	//pr_info("%s ---- mismatch Input: %d %d %d Against: %d %d %d \n",__func__,type,code,value, ts_track_type[i], ts_track_code[i], ts_track_value[i]);
 	ts_track_mistmatch++;
 	}
 	//mutex_unlock(&track_check_lock);
@@ -1473,12 +1473,12 @@ static int ts_track_event_check(int type, int code, int value) {
 }
 static int dump_count = 0;
 static int ts_track_event_complete(void) {
-	pr_info("%s ???? checking | size %d | found %d \n",__func__, ts_track_size, ts_track_intercepted);
+	//pr_info("%s ???? checking | size %d | found %d \n",__func__, ts_track_size, ts_track_intercepted);
 	if (dump_count++ % 20 && ts_track_size <4) {
 		int i = 0;
 		for (i = ts_track_intercepted; i<ts_track_size;i++) 
 		{
-			pr_info("%s ----# Input left [%d]: %d %d %d \n",__func__, i, ts_track_type[i], ts_track_code[i], ts_track_value[i]);
+			//pr_info("%s ----# Input left [%d]: %d %d %d \n",__func__, i, ts_track_type[i], ts_track_code[i], ts_track_value[i]);
 		}
 		dump_count = 0;
 	}
@@ -1500,8 +1500,8 @@ EXPORT_SYMBOL(is_real_ts_input_filtered);
 static void ts_poke_emulate(struct work_struct * ts_poke_emulate_work) {
 	int i;
 	int local_slot = last_mt_slot;
-	pr_info("%s ts_input checking finger counter over 0, then don't simulate %d\n",__func__, finger_counter);
-	pr_info("%s ts_input ######### squeeze try_lock #########\n",__func__);
+	//pr_info("%s ts_input checking finger counter over 0, then don't simulate %d\n",__func__, finger_counter);
+	//pr_info("%s ts_input ######### squeeze try_lock #########\n",__func__);
 	if (!mutex_trylock(&squeeze_swipe_lock)) {
 		return;
 	}
@@ -1553,18 +1553,18 @@ static void ts_poke_emulate(struct work_struct * ts_poke_emulate_work) {
 				ts_track_event_run();
 				udelay(5 * swipe_step_wait_time_mul);
 				if (y_steps%10==0) {
-					pr_info("%s ts_input squeeze emulation step = %d POS_Y = %d \n",__func__,y_steps, 1000+y_diff);
+					//pr_info("%s ts_input squeeze emulation step = %d POS_Y = %d \n",__func__,y_steps, 1000+y_diff);
 				}
 				while(!ts_track_event_complete()) {
 					diff_time = jiffies - start_time;
 					if (diff_time>4*JIFFY_MUL) {
-						pr_info("%s breaking incomplete check cycle ts_check\n",__func__);
+						//pr_info("%s breaking incomplete check cycle ts_check\n",__func__);
 						break;
 					}
 					msleep(1);
 				}
 			}
-			pr_info("fpf %s ts DOWN 0 \n",__func__);
+			//pr_info("fpf %s ts DOWN 0 \n",__func__);
 			{
 				ts_track_event_clear(true);
 			}
@@ -1581,7 +1581,7 @@ static void ts_poke_emulate(struct work_struct * ts_poke_emulate_work) {
 				msleep(1);
 				empty_check_count++;
 				if (empty_check_count%100==30) {
-					pr_info("%s ts_check || fallback\n",__func__);
+					//pr_info("%s ts_check || fallback\n",__func__);
 					input_event(ts_device,EV_ABS,ABS_MT_SLOT,0);
 					input_event(ts_device,EV_ABS,ABS_MT_TRACKING_ID,-1);
 					input_event(ts_device,EV_SYN,0,0);
@@ -1599,7 +1599,7 @@ static void ts_poke_emulate(struct work_struct * ts_poke_emulate_work) {
 					ts_track_event_run();
 					while(!ts_track_event_complete()) {
 						msleep(1);
-						pr_info("%s ts_check || fallback wait 1\n",__func__);
+						//pr_info("%s ts_check || fallback wait 1\n",__func__);
 						diff_time = jiffies - start_time;
 						if (diff_time>30*JIFFY_MUL) break;
 					}
@@ -1609,7 +1609,7 @@ static void ts_poke_emulate(struct work_struct * ts_poke_emulate_work) {
 					ts_track_event_run();
 					while(!ts_track_event_complete()) {
 						msleep(1);
-						pr_info("%s ts_check || fallback wait 2\n",__func__);
+						//pr_info("%s ts_check || fallback wait 2\n",__func__);
 						diff_time = jiffies - start_time;
 						if (diff_time>30*JIFFY_MUL) break;
 					}
@@ -1627,7 +1627,7 @@ static void ts_poke_emulate(struct work_struct * ts_poke_emulate_work) {
 					ts_track_event_run();
 					while(!ts_track_event_complete()) {
 						msleep(1);
-						pr_info("%s ts_check || fallback wait 1\n",__func__);
+						//pr_info("%s ts_check || fallback wait 1\n",__func__);
 						diff_time = jiffies - start_time;
 						if (diff_time>30*JIFFY_MUL) break;
 					}
@@ -1637,7 +1637,7 @@ static void ts_poke_emulate(struct work_struct * ts_poke_emulate_work) {
 					ts_track_event_run();
 					while(!ts_track_event_complete()) {
 						msleep(1);
-						pr_info("%s ts_check || fallback wait 2\n",__func__);
+						//pr_info("%s ts_check || fallback wait 2\n",__func__);
 						diff_time = jiffies - start_time;
 						if (diff_time>30*JIFFY_MUL) break;
 					}
@@ -1653,14 +1653,14 @@ static void ts_poke_emulate(struct work_struct * ts_poke_emulate_work) {
 	}
 	msleep(20);
 	mutex_unlock(&squeeze_swipe_lock);
-	pr_info("%s ts_input ######### squeeze unlock #########\n",__func__);
+	//pr_info("%s ts_input ######### squeeze unlock #########\n",__func__);
 }
 DECLARE_WORK(ts_poke_emulate_work, ts_poke_emulate);
 
 static struct alarm ts_poke_rtc;
 static enum alarmtimer_restart ts_poke_rtc_callback(struct alarm *al, ktime_t now)
 {
-	pr_info("%s kad\n",__func__);
+	//pr_info("%s kad\n",__func__);
 	schedule_work(&ts_poke_emulate_work);
 	return ALARMTIMER_NORESTART;
 }
@@ -1716,7 +1716,7 @@ static void ts_scroll_emulate(int down, int full) {
 	int double_swipe = 0;
 
 
-	pr_info("%s ts_input ######### squeeze try_lock #########\n",__func__);
+	//pr_info("%s ts_input ######### squeeze try_lock #########\n",__func__);
 	if (!mutex_trylock(&squeeze_swipe_lock)) {
 		return;
 	}
@@ -1730,7 +1730,7 @@ static void ts_scroll_emulate(int down, int full) {
 
 	// if last scroll close enough, double round of swipe, if it's intended to be a full swipe...
 	if (last_scroll_time_diff <= SWIPE_ACCELERATED_TIME_LIMIT && !swipe_longcount_finished && full) {
-		pr_info("%s ts_input ###### double speed swipe ####### diff %u swipe longcount finished %d\n",__func__, last_scroll_time_diff, swipe_longcount_finished);
+		//pr_info("%s ts_input ###### double speed swipe ####### diff %u swipe longcount finished %d\n",__func__, last_scroll_time_diff, swipe_longcount_finished);
 //		rounds = 2;
 		double_swipe = 1;
 	}
@@ -1758,7 +1758,7 @@ static void ts_scroll_emulate(int down, int full) {
 		y_diff = down?300:0;
 		y_delta = down?-3:3;
 		y_steps = full>0?70:(full==0?50:50);
-		pr_info("%s ts_input ######### squeeze emulation started ######### rounds %d \n",__func__, rounds);
+		//pr_info("%s ts_input ######### squeeze emulation started ######### rounds %d \n",__func__, rounds);
 
 		// speedy swipe for doubled rounds...
 		if (double_swipe) {
@@ -1768,7 +1768,7 @@ static void ts_scroll_emulate(int down, int full) {
 			if (swipe_step_wait_time_mul > 85) last_swipe_very_quick = 0;
 			if (!last_swipe_very_quick && swipe_step_wait_time_mul < 85) last_swipe_very_quick = 1;
 			if (last_swipe_very_quick && swipe_step_wait_time_mul < 85) swipe_step_wait_time_mul = (swipe_step_wait_time_mul*2)/3; // speed up on the extreme of fast value multiplier < 80, divide it
-			pr_info("%s ts_input ######### squeeze emulation SPEED %d \n",__func__, swipe_step_wait_time_mul);
+			//pr_info("%s ts_input ######### squeeze emulation SPEED %d \n",__func__, swipe_step_wait_time_mul);
 			if (swipe_step_wait_time_mul > 300) swipe_step_wait_time_mul = 300; // to avoid concurrency problem with last_scroll_time_diff
 			if (swipe_step_wait_time_mul < 0) swipe_step_wait_time_mul = 0;
 
@@ -1803,7 +1803,7 @@ static void ts_scroll_emulate(int down, int full) {
 			int second_step_done = 0;
 			unsigned long start_time = jiffies;
 			unsigned int diff_time = 0;
-			pr_info("fpf %s ts DOWN 1 \n",__func__);
+			//pr_info("fpf %s ts DOWN 1 \n",__func__);
 			ts_track_event_clear(true);
 			while (y_steps-->0) {
 				if (first_steps) {
@@ -1833,18 +1833,18 @@ static void ts_scroll_emulate(int down, int full) {
 				ts_track_event_run();
 				usleep_range(5 * swipe_step_wait_time_mul , (5 * swipe_step_wait_time_mul) + 1);
 				if (y_steps%10==0) {
-					pr_info("%s ts_input squeeze emulation step = %d POS_Y = %d \n",__func__,y_steps, 1000+y_diff);
+					//pr_info("%s ts_input squeeze emulation step = %d POS_Y = %d \n",__func__,y_steps, 1000+y_diff);
 				}
 				while(!ts_track_event_complete()) {
 					diff_time = jiffies - start_time;
 					if (diff_time>4*JIFFY_MUL) {
-						pr_info("%s breaking incomplete check cycle ts_check\n",__func__);
+						//pr_info("%s breaking incomplete check cycle ts_check\n",__func__);
 						break;
 					}
 					msleep(1);
 				}
 			}
-			pr_info("fpf %s ts DOWN 0 \n",__func__);
+			//pr_info("fpf %s ts DOWN 0 \n",__func__);
 			{
 				ts_track_event_clear(true);
 			}
@@ -1861,7 +1861,7 @@ static void ts_scroll_emulate(int down, int full) {
 				msleep(1);
 				empty_check_count++;
 				if (empty_check_count%100==30) {
-					pr_info("%s ts_check || fallback\n",__func__);
+					//pr_info("%s ts_check || fallback\n",__func__);
 					input_event(ts_device,EV_ABS,ABS_MT_SLOT,0);
 					input_event(ts_device,EV_ABS,ABS_MT_TRACKING_ID,-1);
 					input_event(ts_device,EV_SYN,0,0);
@@ -1879,7 +1879,7 @@ static void ts_scroll_emulate(int down, int full) {
 					ts_track_event_run();
 					while(!ts_track_event_complete()) {
 						msleep(1);
-						pr_info("%s ts_check || fallback wait 1\n",__func__);
+						//pr_info("%s ts_check || fallback wait 1\n",__func__);
 						diff_time = jiffies - start_time;
 						if (diff_time>30*JIFFY_MUL) break;
 					}
@@ -1889,7 +1889,7 @@ static void ts_scroll_emulate(int down, int full) {
 					ts_track_event_run();
 					while(!ts_track_event_complete()) {
 						msleep(1);
-						pr_info("%s ts_check || fallback wait 2\n",__func__);
+						//pr_info("%s ts_check || fallback wait 2\n",__func__);
 						diff_time = jiffies - start_time;
 						if (diff_time>30*JIFFY_MUL) break;
 					}
@@ -1907,7 +1907,7 @@ static void ts_scroll_emulate(int down, int full) {
 					ts_track_event_run();
 					while(!ts_track_event_complete()) {
 						msleep(1);
-						pr_info("%s ts_check || fallback wait 1\n",__func__);
+						//pr_info("%s ts_check || fallback wait 1\n",__func__);
 						diff_time = jiffies - start_time;
 						if (diff_time>30*JIFFY_MUL) break;
 					}
@@ -1917,7 +1917,7 @@ static void ts_scroll_emulate(int down, int full) {
 					ts_track_event_run();
 					while(!ts_track_event_complete()) {
 						msleep(1);
-						pr_info("%s ts_check || fallback wait 2\n",__func__);
+						//pr_info("%s ts_check || fallback wait 2\n",__func__);
 						diff_time = jiffies - start_time;
 						if (diff_time>30*JIFFY_MUL) break;
 					}
@@ -1927,17 +1927,17 @@ static void ts_scroll_emulate(int down, int full) {
 				if (diff_time>30*JIFFY_MUL) break;
 			}
 		}
-		pr_info("%s ts_input ######### squeeze emulation ended #########\n",__func__);
+		//pr_info("%s ts_input ######### squeeze emulation ended #########\n",__func__);
 	}
 	if (pseudo_rnd>4) pseudo_rnd = 0;
 	msleep(100);
 	while (ts_emulated_events_in_progress>10) {
-		pr_info("%s ts_input ######### squeeze emulation left events %d  -- finger count %d \n",__func__,ts_emulated_events_in_progress, finger_counter);
+		//pr_info("%s ts_input ######### squeeze emulation left events %d  -- finger count %d \n",__func__,ts_emulated_events_in_progress, finger_counter);
 		msleep(1);
 	}
 	msleep(20);
 	mutex_unlock(&squeeze_swipe_lock);
-	pr_info("%s ts_input ######### squeeze unlock #########\n",__func__);
+	//pr_info("%s ts_input ######### squeeze unlock #########\n",__func__);
 }
 #endif
 
@@ -1946,12 +1946,12 @@ static void squeeze_swipe_func(struct work_struct * squeeze_swipe_work) {
 }
 static DECLARE_WORK(squeeze_swipe_work, squeeze_swipe_func);
 static void squeeze_swipe_trigger(void) {
-	pr_info("%s ts_input squeeze swipe trigger is_locked...\n",__func__);
+	//pr_info("%s ts_input squeeze swipe trigger is_locked...\n",__func__);
 	if (mutex_is_locked(&squeeze_swipe_lock)) {
 		return;
 	}
 	interrupt_swipe_longcount = 1;
-	pr_info("%s ts_input squeeze swipe trigger is_locked NOT..scheduling work...\n",__func__);
+	//pr_info("%s ts_input squeeze swipe trigger is_locked NOT..scheduling work...\n",__func__);
 	schedule_work(&squeeze_swipe_work);
 }
 
@@ -1961,12 +1961,12 @@ static void squeeze_swipe_short_func(struct work_struct * squeeze_swipe_short_wo
 }
 static DECLARE_WORK(squeeze_swipe_short_work, squeeze_swipe_short_func);
 static void squeeze_swipe_short_trigger(void) {
-	pr_info("%s ts_input squeeze swipe trigger is_locked...\n",__func__);
+	//pr_info("%s ts_input squeeze swipe trigger is_locked...\n",__func__);
 	if (mutex_is_locked(&squeeze_swipe_lock)) {
 		return;
 	}
 	interrupt_swipe_longcount = 1;
-	pr_info("%s ts_input squeeze swipe trigger is_locked NOT..scheduling work...\n",__func__);
+	//pr_info("%s ts_input squeeze swipe trigger is_locked NOT..scheduling work...\n",__func__);
 	schedule_work(&squeeze_swipe_short_work);
 }
 
@@ -1982,10 +1982,10 @@ static void squeeze_longcount(struct work_struct * squeeze_longcount_work) {
 	while (1) {
 		if (interrupt_longcount) {
 			return;
-			pr_info("%s squeeze call || longcount interrupted\n",__func__);
+			//pr_info("%s squeeze call || longcount interrupted\n",__func__);
 		}
 		if (jiffies - longcount_start > MAX_SQUEEZE_TIME) {
-			pr_info("%s squeeze call || longcount VIBRATION !! \n",__func__);
+			//pr_info("%s squeeze call || longcount VIBRATION !! \n",__func__);
 			longcount_finished = 1;
 			squeeze_vib();
 			return;
@@ -2005,7 +2005,7 @@ unsigned long last_kad_screen_off_time = 0;
 #define KAD_SCREEN_OFF_NEAR_TIME_MAX 320
 bool is_near_kad_screen_off_time(void) {
 	unsigned int diff = jiffies - last_kad_screen_off_time;
-	pr_info("%s difference since last screen_off %u < %d\n",__func__,diff, KAD_SCREEN_OFF_NEAR_TIME_MAX * JIFFY_MUL);
+	//pr_info("%s difference since last screen_off %u < %d\n",__func__,diff, KAD_SCREEN_OFF_NEAR_TIME_MAX * JIFFY_MUL);
 	if (diff < KAD_SCREEN_OFF_NEAR_TIME_MAX * JIFFY_MUL) {
 		return true;
 	}
@@ -2017,7 +2017,7 @@ unsigned long last_peek_timeout_screen_off_time = 0;
 #define PEEK_TIMEOUT_SCREEN_OFF_NEAR_TIME_MAX 80
 bool is_near_peek_timeout_screen_off_time(void) {
 	unsigned int diff = jiffies - last_peek_timeout_screen_off_time;
-	pr_info("%s difference since last kad_screen_off %u < %d\n",__func__,diff, PEEK_TIMEOUT_SCREEN_OFF_NEAR_TIME_MAX * JIFFY_MUL);
+	//pr_info("%s difference since last kad_screen_off %u < %d\n",__func__,diff, PEEK_TIMEOUT_SCREEN_OFF_NEAR_TIME_MAX * JIFFY_MUL);
 	if (diff < PEEK_TIMEOUT_SCREEN_OFF_NEAR_TIME_MAX * JIFFY_MUL) {
 		return true;
 	}
@@ -2038,7 +2038,7 @@ static void squeeze_peekmode(struct work_struct * squeeze_peekmode_work) {
 			msleep(30);
 			// .. check if last power resgistration through threshold reg callback happened lately... if so no need to do screen off..
 			squeeze_reg_diff = jiffies - last_squeeze_power_registration_jiffies;
-			pr_info("%s squeeze_reg_diff %u\n",__func__,squeeze_reg_diff);
+			//pr_info("%s squeeze_reg_diff %u\n",__func__,squeeze_reg_diff);
 			if (squeeze_reg_diff<4*JIFFY_MUL) return;
 		}
 	}
@@ -2054,7 +2054,7 @@ static void squeeze_peekmode(struct work_struct * squeeze_peekmode_work) {
 		}
 	}
 	// screen still on and sqeueeze peek wait was not interrupted...
-	pr_info("%s screen_on %d squeeze_peek_wait %d interrupt_kad_peekmode_wait %d\n",__func__,screen_on,squeeze_peek_wait,interrupt_kad_peekmode_wait);
+	//pr_info("%s screen_on %d squeeze_peek_wait %d interrupt_kad_peekmode_wait %d\n",__func__,screen_on,squeeze_peek_wait,interrupt_kad_peekmode_wait);
 	if (screen_on && squeeze_peek_wait) {
 		last_kad_screen_off_time = jiffies;
 		last_peek_timeout_screen_off_time = jiffies;
@@ -2089,7 +2089,7 @@ int check_single_fp_running = 0;
 static enum alarmtimer_restart check_single_fp_vib_rtc_callback(struct alarm *al, ktime_t now)
 {
 	// FP single vibration: unlock device event...
-	pr_info("%s kad double fp vibration detection: single vib detected Stop KAD!\n",__func__);
+	//pr_info("%s kad double fp vibration detection: single vib detected Stop KAD!\n",__func__);
 	stop_kad_running(true,__func__);
 	if (init_done) {
 		alarm_cancel(&kad_repeat_rtc);
@@ -2102,7 +2102,7 @@ static enum alarmtimer_restart check_single_fp_vib_rtc_callback(struct alarm *al
 // this callback allows registration of FP vibration, in which case peek timeout auto screen off should be canceled...
 int register_fp_vibration(void) {
 	// fp scanner pressed, cancel peek timeout, but only do that automatically if not in kad mode (otherwise a double fp vibration check is due)
-	pr_info("%s kad_kcal_overlay_on %d kad_running %d kad_running_for_kcal_only %d\n",__func__,kad_kcal_overlay_on,kad_running,kad_running_for_kcal_only);
+	//pr_info("%s kad_kcal_overlay_on %d kad_running %d kad_running_for_kcal_only %d\n",__func__,kad_kcal_overlay_on,kad_running,kad_running_for_kcal_only);
 	if ((!kad_running && screen_on) || kad_running_for_kcal_only) {
 		bool poke = kad_kcal_overlay_on || kad_running_for_kcal_only;
 		stop_kad_running(true,__func__);
@@ -2118,13 +2118,13 @@ int register_fp_vibration(void) {
 				// ...so might be pocket touch, do not register!)
 				// ...so it's either for a screen on state, or for Squeeze peek KCAL only, so registering user activity to cancel smart timing is ok.
 			}
-			pr_info("%s kad double fp vibration detected, should not stop KAD!\n",__func__);
+			//pr_info("%s kad double fp vibration detected, should not stop KAD!\n",__func__);
 			alarm_cancel(&check_single_fp_vib_rtc);
 			check_single_fp_running = 0;
 		} else {
 			ktime_t wakeup_time;
 			ktime_t curr_time = { .tv64 = 0 };
-			pr_info("%s kad double fp vibration detection start!\n",__func__);
+			//pr_info("%s kad double fp vibration detection start!\n",__func__);
 			check_single_fp_running = 1;
 			wakeup_time = ktime_add_us(curr_time,
 				(160LL * 1000LL)); // msec to usec
@@ -2149,7 +2149,7 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 	unsigned int diff = jiffies - last_screen_event_timestamp;
 	// time passed since last nanohub driver based spurious squeeze wake event detection
 	unsigned int nanohub_diff = jiffies - last_nanohub_spurious_squeeze_timestamp;
-	pr_info("%s squeeze call ts %u diff %u nh_diff %u vibration %d\n", __func__, (unsigned int)timestamp,diff,nanohub_diff,vibration);
+	//pr_info("%s squeeze call ts %u diff %u nh_diff %u vibration %d\n", __func__, (unsigned int)timestamp,diff,nanohub_diff,vibration);
 	if (!squeeze_kernel_handled) return;
 
 	if (!get_squeeze_wake() && !get_squeeze_sleep() && !get_squeeze_swipe() && !get_squeeze_peek()) return;
@@ -2159,7 +2159,7 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 	if (!last_screen_event_timestamp) return;
 	if ((!screen_on && diff < 3 * JIFFY_MUL) || (screen_on && diff < 30 * JIFFY_MUL)) return;
 
-	pr_info("%s squeeze call ++ START STAGE : %d\n",__func__,stage);
+	//pr_info("%s squeeze call ++ START STAGE : %d\n",__func__,stage);
 	if (stage == STAGE_INIT) {
 		if (!vibration) {
 			stage = STAGE_FIRST_WL;
@@ -2171,7 +2171,7 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 			// catching the very rare case where nanohub squeeze detection happens
 			// while screen off and release event is detected without actual release,
 			//  and one Wakelock event will be skipped... but through nanohub it was detected...
-			pr_info("%s squeeze call -- spurious nanohub detection: power onoff endstage: %d\n",__func__,stage);
+			//pr_info("%s squeeze call -- spurious nanohub detection: power onoff endstage: %d\n",__func__,stage);
 			stage = STAGE_INIT;
 			last_nanohub_spurious_squeeze_timestamp = 0;
 			wait_for_squeeze_power = 1; // pwr trigger should be canceled if right after squeeze happens a power setting
@@ -2202,20 +2202,20 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 #if 1 
 // htc u12 special vibration pattern call is sure to be of edge squeeze!
 		if (!screen_on && vibration) {
-			pr_info("%s squeeze call -- vibration in INIT phase, skipping to next stage, setting last squeeze timestamp... : %d\n",__func__,stage);
+			//pr_info("%s squeeze call -- vibration in INIT phase, skipping to next stage, setting last squeeze timestamp... : %d\n",__func__,stage);
 			// skip to wakelock stage right now
 			stage = STAGE_FIRST_WL;
 			last_squeeze_timestamp = jiffies;
 		} else {
 #endif
-		pr_info("%s squeeze call -- END STAGE : %d\n",__func__,stage);
+		//pr_info("%s squeeze call -- END STAGE : %d\n",__func__,stage);
 		return;
 #if 1
 		}
 #endif
 	}
 	diff = jiffies - last_squeeze_timestamp;
-	pr_info("%s squeeze call ++ squeeze diff : %u\n",__func__,diff);
+	//pr_info("%s squeeze call ++ squeeze diff : %u\n",__func__,diff);
 
 	if (stage == STAGE_FIRST_WL) {
 		if (vibration && diff <= 15 * JIFFY_MUL) { // changing 5 -> 15 on u12+, wake can be slower before vibration is actually done after wakelock...
@@ -2225,7 +2225,7 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 				// catching the very rare case where nanohub squeeze detection happens
 				// while screen off and release event is detected without actual release,
 				//  and one Wakelock event will be skipped... but through nanohub it was detected...
-				pr_info("%s squeeze call -- stage WL -- spurious nanohub detection: power onoff endstage: %d\n",__func__,stage);
+				//pr_info("%s squeeze call -- stage WL -- spurious nanohub detection: power onoff endstage: %d\n",__func__,stage);
 				stage = STAGE_INIT;
 				last_nanohub_spurious_squeeze_timestamp = 0;
 				wait_for_squeeze_power = 1; // pwr trigger should be canceled if right after squeeze happens a power setting
@@ -2268,7 +2268,7 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 				interrupt_swipe_longcount = 1;
 			}
 			squeeze_longcount_trigger();
-			pr_info("%s squeeze call -- END STAGE : %d\n",__func__,stage);
+			//pr_info("%s squeeze call -- END STAGE : %d\n",__func__,stage);
 			return; 
 		} else {
 			if (vibration) { // vibration but too late...back to init state..
@@ -2277,7 +2277,7 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 				// wakelock registered -> start time counting in FIRST_WL stage again...
 				last_squeeze_timestamp = jiffies;
 			}
-			pr_info("%s squeeze call -- END STAGE : %d\n",__func__,stage);
+			//pr_info("%s squeeze call -- END STAGE : %d\n",__func__,stage);
 			return;
 		}
 	}
@@ -2286,17 +2286,17 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 		// interrupt longcount
 		interrupt_longcount = 1;
 		if (vibration) {
-			pr_info("%s squeeze call -- exiting because vibration endstage: %d\n",__func__,stage);
+			//pr_info("%s squeeze call -- exiting because vibration endstage: %d\n",__func__,stage);
 			return;
 		} else if ( (diff<=MAX_SQUEEZE_TIME) || (screen_on && !longcount_finished) ) {
-			pr_info("%s squeeze call -- power onoff endstage: %d\n",__func__,stage);
+			//pr_info("%s squeeze call -- power onoff endstage: %d\n",__func__,stage);
 			wait_for_squeeze_power = 1; // pwr trigger should be canceled if right after squeeze happens a power setting
 			// ..that would mean user is on the settings screen and calibrating.
 			// also...
 			register_input_event(__func__);
 			// if peek mode is on, and between long squeeze and short squeeze, peek
 			if (!screen_on && get_squeeze_peek()) {
-				pr_info("%s squeeze call -- power onoff - PEEK MODE - PEEK wake: %d\n",__func__,stage);
+				//pr_info("%s squeeze call -- power onoff - PEEK MODE - PEEK wake: %d\n",__func__,stage);
 				last_screen_event_timestamp = jiffies;
 				start_kad_running(KAD_FOR_SQUEEZE);
 				squeeze_peekmode_trigger();
@@ -2318,7 +2318,7 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 			}
 		} else if (!screen_on && diff>MAX_SQUEEZE_TIME && diff<=MAX_SQUEEZE_TIME_LONG && get_squeeze_peek()) {
 			// if peek mode is on, and between long squeeze and short squeeze, peek
-			pr_info("%s squeeze call -- power onoff endstage PEEK MODE - full wake! %d\n",__func__,stage);
+			//pr_info("%s squeeze call -- power onoff endstage PEEK MODE - full wake! %d\n",__func__,stage);
 			last_screen_event_timestamp = jiffies;
 			wait_for_squeeze_power = 1; // pwr trigger should be canceled if right after squeeze happens a power setting
 			// ..that would mean user is on the settings screen and calibrating.
@@ -2337,12 +2337,12 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 					squeeze_swipe_dir = !squeeze_swipe_dir;
 					// call a bit of scrolling to show which direction it will go (full param = 0)
 					squeeze_swipe_short_trigger();
-					pr_info("%s squeeze TURN SWIPE DIRECTION -- END STAGE : %d\n",__func__,stage);
+					//pr_info("%s squeeze TURN SWIPE DIRECTION -- END STAGE : %d\n",__func__,stage);
 					register_input_event(__func__);
 					return; // exit with turning...
 				}
 				// if swipe mode is on, and between long squeeze and short squeeze, power off
-				pr_info("%s squeeze call -- power onoff endstage SWIPE - full sleep - swipe mode middle long gesture! %d\n",__func__,stage);
+				//pr_info("%s squeeze call -- power onoff endstage SWIPE - full sleep - swipe mode middle long gesture! %d\n",__func__,stage);
 				last_screen_event_timestamp = jiffies;
 				fpf_pwrtrigger(0,__func__); // POWER OFF
 				stop_kad_running(true,__func__);
@@ -2354,14 +2354,14 @@ void register_squeeze(unsigned long timestamp, int vibration) {
 				squeeze_swipe_dir = !squeeze_swipe_dir;
 				// call a bit of scrolling to show which direction it will go (full param = 0)
 				squeeze_swipe_short_trigger();
-				pr_info("%s squeeze TURN SWIPE DIRECTION -- END STAGE : %d\n",__func__,stage);
+				//pr_info("%s squeeze TURN SWIPE DIRECTION -- END STAGE : %d\n",__func__,stage);
 				return;
 			}
 		} else if (!screen_on || diff>75 * JIFFY_MUL) { // time passed way over a normal wakelock cycle... start with second phase instead!
 			stage = STAGE_FIRST_WL;
 			last_squeeze_timestamp = jiffies;
 		}
-		pr_info("%s squeeze call -- END STAGE : %d\n",__func__,stage);
+		//pr_info("%s squeeze call -- END STAGE : %d\n",__func__,stage);
 	}
 
 }
@@ -2373,13 +2373,13 @@ static unsigned long kad_first_one_finger_done = 0;
 
 // -- KAD (Kernel Ambient Display --
 void do_kernel_ambient_display(void) {
-	pr_info("%s kad -- screen_on %d kad_running %d \n",__func__,screen_on, kad_running);
+	//pr_info("%s kad -- screen_on %d kad_running %d \n",__func__,screen_on, kad_running);
 
 	if (uci_get_user_property_int_mm("kad_only_on_charger", kad_only_on_charger, 0, 1) && !ntf_is_charging()) return;
 
 	if (!screen_on && !kad_running) {
 		start_kad_running(KAD_FOR_KAD);
-		pr_info("%s kad -- power onoff - PEEK MODE - PEEK wake: %d\n",__func__,stage);
+		//pr_info("%s kad -- power onoff - PEEK MODE - PEEK wake: %d\n",__func__,stage);
 		last_screen_event_timestamp = jiffies;
 		kad_first_one_finger_touch_time = 0;
 		kad_first_one_finger_done = 0;
@@ -2392,7 +2392,7 @@ void do_kernel_ambient_display(void) {
 
 static enum alarmtimer_restart kad_repeat_rtc_callback(struct alarm *al, ktime_t now)
 {
-	pr_info("%s kad\n",__func__);
+	//pr_info("%s kad\n",__func__);
 	if (should_kad_start()) {
 		do_kernel_ambient_display();
 	}
@@ -2404,7 +2404,7 @@ static enum alarmtimer_restart kad_repeat_rtc_callback(struct alarm *al, ktime_t
 static void kernel_ambient_display_internal(bool led_intercepted) {
 
 	if (!should_kad_start()) return;
-	pr_info("%s kad -- ||||||| +++++++++++++ KAD +++++++++++++ ////// screen_on %d kad_running %d \n",__func__,screen_on, kad_running);
+	//pr_info("%s kad -- ||||||| +++++++++++++ KAD +++++++++++++ ////// screen_on %d kad_running %d \n",__func__,screen_on, kad_running);
 	if (!led_intercepted || !is_near_kad_screen_off_time()) {
 		kad_repeat_counter = 0;
 	}
@@ -2463,7 +2463,7 @@ void register_squeeze_wake(int nanohub_flag, int vibrator_flag, unsigned long ti
 	unsigned int diff = timestamp - last_timestamp;
 	int event = nanohub_flag?(init_event_flag?SQUEEZE_EVENT_TYPE_NANOHUB_INIT:SQUEEZE_EVENT_TYPE_NANOHUB):SQUEEZE_EVENT_TYPE_VIBRATOR;
 
-	pr_info("%s squeeze wake call, nano %d vib %d ts %u diff %u init flag %d event %d last_event %d\n", __func__, nanohub_flag,vibrator_flag,(unsigned int)timestamp,diff,init_event_flag, event, last_event);
+	//pr_info("%s squeeze wake call, nano %d vib %d ts %u diff %u init flag %d event %d last_event %d\n", __func__, nanohub_flag,vibrator_flag,(unsigned int)timestamp,diff,init_event_flag, event, last_event);
 	last_timestamp = timestamp;
 
 	if (
@@ -2480,11 +2480,11 @@ void register_squeeze_wake(int nanohub_flag, int vibrator_flag, unsigned long ti
 		//
 		// ... if event is a Nanohub release event following another release vent after a long period passing, it usually means
 		// ... nanohub driver missed the INIT event, in that case enter this branch too.
-		pr_info("%s spurious squeeze nanohub detection triggered: diff %u\n",__func__, diff);
+		//pr_info("%s spurious squeeze nanohub detection triggered: diff %u\n",__func__, diff);
 		last_nanohub_spurious_squeeze_timestamp = timestamp;
 
 		if (stage == STAGE_VIB) {
-			pr_info("%s spurious squeeze nanohub detection triggered: STAGE_VIB - calling register_squeeze right now.\n",__func__);
+			//pr_info("%s spurious squeeze nanohub detection triggered: STAGE_VIB - calling register_squeeze right now.\n",__func__);
 			// if process is already after detecting VIB (stage_vib), call directly in,
 			// in some cases this is necessary, as userspace WL can delay too much,
 			// while this nanohub call happening earlier...
@@ -2499,14 +2499,14 @@ void register_squeeze_wake(int nanohub_flag, int vibrator_flag, unsigned long ti
 // Currently it's losing some events, thus this part is not used at the moment.
 	if (screen_on && diff < 45 * JIFFY_MUL && event!=last_event) {
 		if (!get_squeeze_sleep()) return;
-		pr_info("%s screen on and latest event diff small enough: pwr on\n",__func__);
+		//pr_info("%s screen on and latest event diff small enough: pwr on\n",__func__);
 		last_timestamp = 0;
 		fpf_pwrtrigger(0,__func__);
 		return;
 	}
 #endif
 	last_event = event;
-	pr_info("%s latest nanohub/vib event processed. diff: %u\n",__func__,diff);
+	//pr_info("%s latest nanohub/vib event processed. diff: %u\n",__func__,diff);
 }
 EXPORT_SYMBOL(register_squeeze_wake);
 
@@ -2587,9 +2587,7 @@ static bool ts_is_touchscreen_key_event(int type, int code) {
 }
 
 static bool filter_next_power_key_up = false;
-static bool ts_input_filter(struct input_handle *handle,
-                                    unsigned int type, unsigned int code,
-                                    int value)
+static bool ts_input_filter(struct input_handle *handle, unsigned int type, unsigned int code, int value)
 {
 #if 1
 	bool filter_event = false;
@@ -2600,18 +2598,18 @@ static bool ts_input_filter(struct input_handle *handle,
 		register_input_event(__func__);
 	}
 
-	//pr_info("%s ts input filter called t %d c %d v %d\n",__func__, type,code,value);
+	////pr_info("%s ts input filter called t %d c %d v %d\n",__func__, type,code,value);
 
 	if (type == EV_KEY) {
 //#ifdef LOG_INPUT_EVENTS
 #if 1
-		pr_info("%s _____ ts_input key %d %d %d\n",__func__,type,code,value);
+		//pr_info("%s _____ ts_input key %d %d %d\n",__func__,type,code,value);
 #endif
 		if (code == 116) {
 			if (value==0 && filter_next_power_key_up) return true;
 
 			if (value==1 && !screen_on && (get_block_power_key_in_pocket() || is_near_peek_timeout_screen_off_time())) {
-				pr_info("%s proximity or near_peak_timeout ts_input power key filter (near peek timeout screenoff: %d)\n",__func__,is_near_peek_timeout_screen_off_time());
+				//pr_info("%s proximity or near_peak_timeout ts_input power key filter (near peek timeout screenoff: %d)\n",__func__,is_near_peek_timeout_screen_off_time());
 				filter_next_power_key_up = true;
 				return true;
 			} else {
@@ -2629,16 +2627,16 @@ static bool ts_input_filter(struct input_handle *handle,
 			}
 		}
 		if ((code == 115 || code == 114) && !screen_on && get_block_volume_key_in_pocket() && !ntf_is_in_call()) { // do not filter in call
-			pr_info("%s proximity ts_input volume key filter\n",__func__);
+			//pr_info("%s proximity ts_input volume key filter\n",__func__);
 			return true; // filter vol up/dn in proximity...
 		}
 	}
 #ifdef LOG_INPUT_EVENTS
 	if (type == EV_ABS) {
-		pr_info("%s _____ ts_input log_abs %d %d %d\n",__func__,type,code,value);
+		//pr_info("%s _____ ts_input log_abs %d %d %d\n",__func__,type,code,value);
 	}
 	if (type == EV_SYN) {
-		pr_info("%s _____ ts_input log_syn %d %d %d\n",__func__,type,code,value);
+		//pr_info("%s _____ ts_input log_syn %d %d %d\n",__func__,type,code,value);
 	}
 #endif
 
@@ -2696,10 +2694,10 @@ static bool ts_input_filter(struct input_handle *handle,
 	if (mutex_is_locked(&squeeze_swipe_lock)) {
 		// in emulated swipe...block event that is not the event matching emulation event values... ??? always let through finger touch/release true...
 		if (!check_ts_current_map(type,code,value) && !finger_touch_event) {
-			pr_info("%s ts_input filtering ts input while emulated scroll! %d %d %d\n",__func__,type,code,value);
+			//pr_info("%s ts_input filtering ts input while emulated scroll! %d %d %d\n",__func__,type,code,value);
 			return true;
 		} else {
-//			pr_info("%s ts_input LETTING THROUGH ts input while emulated scroll! %d %d %d -- finger_counter %d -- ts_emulated_events yet: %d \n",__func__,type,code,value,finger_counter, ts_emulated_events_in_progress);
+//			//pr_info("%s ts_input LETTING THROUGH ts input while emulated scroll! %d %d %d -- finger_counter %d -- ts_emulated_events yet: %d \n",__func__,type,code,value,finger_counter, ts_emulated_events_in_progress);
 		}
 	} else 
 	{
@@ -2729,13 +2727,13 @@ static bool ts_input_filter(struct input_handle *handle,
 							if (squeeze_swipe_dir == 0) {
 								last_scroll_emulate_timestamp = 0; // direction change, make the first scroll slow by putting this timestamp 0
 								squeeze_swipe_dir = 1; // SCROLL DOWN
-								pr_info("%s ts_input filtering TURNING DIRECTION ON INPUT FILTER c_x %d c_y %d \n",__func__,c_x,c_y);
+								//pr_info("%s ts_input filtering TURNING DIRECTION ON INPUT FILTER c_x %d c_y %d \n",__func__,c_x,c_y);
 							}
 						} else if (last_y < c_y) { // swiping down
 							if (squeeze_swipe_dir == 1) {
 								last_scroll_emulate_timestamp = 0; // direction change, make the first scroll slow by putting this timestamp 0
 								squeeze_swipe_dir = 0; // SCROLL UP
-								pr_info("%s ts_input filtering TURNING DIRECTION ON INPUT FILTER c_x %d c_y %d \n",__func__,c_x,c_y);
+								//pr_info("%s ts_input filtering TURNING DIRECTION ON INPUT FILTER c_x %d c_y %d \n",__func__,c_x,c_y);
 							}
 						}
 					}
@@ -2752,7 +2750,7 @@ skip_ts:
 	if (screen_on_full && !screen_off_early) {
 		//pr_info("%s touchscreen checks... kad running %d kad_running_for_kcal_only %d disable_touch_input %d ts_is_ts_key_event %d\n",__func__, kad_running, kad_running_for_kcal_only, get_kad_disable_touch_input(), ts_is_touchscreen_key_event(type,code));
 		if (!kad_running || kad_running_for_kcal_only || !get_kad_disable_touch_input() || (type==EV_KEY && !ts_is_touchscreen_key_event(type,code))) { // if not in KAD display mode, or not touchscreen input
-			//pr_info("%s squeeze_peek_wait = 0\n",__func__);
+			////pr_info("%s squeeze_peek_wait = 0\n",__func__);
 			squeeze_peek_wait = 0; // interrupt peek wait, touchscreen was interacted, don't turn screen off after peek time over...
 			if (kad_running || kad_running_for_kcal_only) { 
 				stop_kad_running(true,__func__);
@@ -2765,19 +2763,19 @@ skip_ts:
 				filtered_ts_event = true;
 				filter_event = true;
 			}
-			pr_info("%s filter branch... kad_first_one_finger_done %d kad_finger_counter %d filter_event %d \n",__func__, (kad_first_one_finger_done>0), kad_finger_counter, filter_event);
+			//pr_info("%s filter branch... kad_first_one_finger_done %d kad_finger_counter %d filter_event %d \n",__func__, (kad_first_one_finger_done>0), kad_finger_counter, filter_event);
 			if (type == EV_ABS) {
-				pr_info("%s filter branch _____ ts_input log_abs %d %d %d\n",__func__,type,code,value);
+				//pr_info("%s filter branch _____ ts_input log_abs %d %d %d\n",__func__,type,code,value);
 			}
 			if (type == EV_SYN) {
-				pr_info("%s filter branch _____ ts_input log_syn %d %d %d\n",__func__,type,code,value);
+				//pr_info("%s filter branch _____ ts_input log_syn %d %d %d\n",__func__,type,code,value);
 			}
 			if (kad_finger_counter == 0) { //
 				if ((code==47) || (code==57 && value == -1) || (type==0 && code==0)) {
 					// if no touch on screen yet, but events coming related to fingers leaving, then that must be remnants of a previous screen on state with fingers on screen while it turned off...
 					// let thos events unfiltered and unchecked...
 					filter_event = false;
-					pr_info("%s filter branch _____ remnant event detected... do NOT filter EVENT: %d %d %d\n",__func__,type,code,value);
+					//pr_info("%s filter branch _____ remnant event detected... do NOT filter EVENT: %d %d %d\n",__func__,type,code,value);
 					/* Example...untouching fingers upon screen on...remnant events:
 					[  440.638015] ts_input_filter filter branch _____ ts_input log_abs 3 47 0
 					...
@@ -2798,7 +2796,7 @@ skip_ts:
 				kad_finger_counter++;
 				if (kad_finger_counter>1) {
 					// over one finger, reset kad_first_one_finger_done...
-					pr_info("%s kad first_one done = 0 (1) \n",__func__);
+					//pr_info("%s kad first_one done = 0 (1) \n",__func__);
 					kad_first_one_finger_done = 0;
 				}
 			}
@@ -2807,19 +2805,19 @@ skip_ts:
 					// exactly one finger leaving the screen...
 					if (!kad_first_one_finger_done) {
 						// first time...
-						pr_info("%s kad first_one done = 1\n",__func__);
+						//pr_info("%s kad first_one done = 1\n",__func__);
 						kad_first_one_finger_touch_time = jiffies;
 						kad_first_one_finger_done = 1;
 					} else {
 						unsigned int time_diff = jiffies - kad_first_one_finger_touch_time;
-						pr_info("%s kad first_one done == 1 check time_diff %u \n",__func__,time_diff);
+						//pr_info("%s kad first_one done == 1 check time_diff %u \n",__func__,time_diff);
 						kad_first_one_finger_touch_time = 0;
 						kad_first_one_finger_done = 0;
 						if (time_diff < 50*JIFFY_MUL) { // double tap single finger happened, stop kad without waking...
 //							if (!kad_running_for_aod_gesture) 
 							{
 								// make timeout for kad
-								pr_info("%s kad first_one done == 1 DOUBLE TAP, interrupt kad and vibrate \n",__func__);
+								//pr_info("%s kad first_one done == 1 DOUBLE TAP, interrupt kad and vibrate \n",__func__);
 								interrupt_kad_peekmode_wait = 1; // signal interruption for kad squeeze_peekmode work...
 								register_input_event(__func__); // stop flashlight...
 								set_vibrate(20); 
@@ -2835,7 +2833,7 @@ skip_ts:
 						}
 					}
 				} else {
-					pr_info("%s kad first_one done = 0 (2) \n",__func__);
+					//pr_info("%s kad first_one done = 0 (2) \n",__func__);
 					kad_first_one_finger_touch_time = 0;
 					kad_first_one_finger_done = 0;
 				}
@@ -2846,14 +2844,14 @@ skip_ts:
 			if (get_kad_two_finger_gesture() && kad_finger_counter==2) {
 				squeeze_peek_wait = 0; // interrupt peek wait, touchscreen was interacted, don't turn screen off after peek time over...
 				if (kad_running) {
-					pr_info("%s ##### two finger -- stop kad running #######\n",__func__);
+					//pr_info("%s ##### two finger -- stop kad running #######\n",__func__);
 					stop_kad_running(true,__func__);
 				}
 			}
 			if (get_kad_three_finger_gesture() && kad_finger_counter==3) {
 				squeeze_peek_wait = 0; // interrupt peek wait, touchscreen was interacted, don't turn screen off after peek time over...
 				if (kad_running) {
-					pr_info("%s ##### three finger -- stop kad running #######\n",__func__);
+					//pr_info("%s ##### three finger -- stop kad running #######\n",__func__);
 					stop_kad_running(true,__func__);
 				}
 			}
@@ -2878,7 +2876,7 @@ skip_ts:
 	}
 
 	if (filter_event) {
-		pr_info("%s ts_input filtering ts input while kad_control! %d %d %d\n",__func__,type,code,value);
+		//pr_info("%s ts_input filtering ts input while kad_control! %d %d %d\n",__func__,type,code,value);
 		return true;
 	}
 	return false;
@@ -2893,7 +2891,7 @@ static void ts_input_event(struct input_handle *handle, unsigned int type,
 }
 
 static int ts_input_dev_filter(struct input_dev *dev) {
-	pr_info("%s %s\n",__func__, dev->name);
+	//pr_info("%s %s\n",__func__, dev->name);
 	if (
 		strstr(dev->name, "himax-touchscreen") ||
 		strstr(dev->name, "synaptics_dsx") ||
@@ -2979,7 +2977,7 @@ static struct kobject *fpf_kobj;
 bool charging = true;
 static void ntf_listener(char* event, int num_param, char* str_param) {
         if (strcmp(event,NTF_EVENT_CHARGE_LEVEL) && strcmp(event, NTF_EVENT_INPUT)) {
-                pr_info("%s fpf ntf listener event %s %d %s\n",__func__,event,num_param,str_param);
+                //pr_info("%s fpf ntf listener event %s %d %s\n",__func__,event,num_param,str_param);
         }
 
 	if (!strcmp(event,NTF_EVENT_AOD_GESTURE)) {
@@ -3010,7 +3008,7 @@ static void ntf_listener(char* event, int num_param, char* str_param) {
 		screen_off_early = 0;
 		last_screen_on_seconds = get_global_seconds();
 		last_screen_on_early_time = jiffies;
-		pr_info("fpf kad screen on -early\n");
+		//pr_info("fpf kad screen on -early\n");
 	} else
 
 	if (!strcmp(event,NTF_EVENT_WAKE_BY_USER) || !strcmp(event,NTF_EVENT_WAKE_BY_FRAMEWORK)) {
@@ -3018,10 +3016,10 @@ static void ntf_listener(char* event, int num_param, char* str_param) {
 		screen_on_full = 1;
 		screen_off_early = 0;
 		last_screen_event_timestamp = jiffies;
-		pr_info("%s kad screen on\n",__func__);
+		//pr_info("%s kad screen on\n",__func__);
 		kcal_sleep_before_restore = true;
 		schedule_work(&kcal_restore_work);
-		pr_info("fpf screen on\n");
+		//pr_info("fpf screen on\n");
 	} else
 
 	if (!strcmp(event,NTF_EVENT_SLEEP_EARLY)) {
@@ -3029,7 +3027,7 @@ static void ntf_listener(char* event, int num_param, char* str_param) {
 		screen_off_early = 1;
 		//screen_on_full = 0;
 		last_kad_screen_off_time = jiffies;
-		pr_info("fpf kad screen off -early\n");
+		//pr_info("fpf kad screen off -early\n");
 	} else
 
 	if (!strcmp(event,NTF_EVENT_SLEEP)) {
@@ -3041,7 +3039,7 @@ static void ntf_listener(char* event, int num_param, char* str_param) {
 		last_screen_off_seconds = get_global_seconds();
 		last_screen_lock_check_was_false = 0;
 		last_scroll_emulate_timestamp = 0;
-		pr_info("fpf kad screen off\n");
+		//pr_info("fpf kad screen off\n");
 	} else
 
 	if (!strcmp(event,NTF_EVENT_RINGING)) {
@@ -3069,7 +3067,7 @@ static void ntf_listener(char* event, int num_param, char* str_param) {
         if (!strcmp(event,NTF_EVENT_LOCKED)) {
 		if (!num_param) { // unlocked... probably fingerprint...
 			if (screen_on) {
-				pr_info("%s kad unlocked: Stop KAD!\n",__func__);
+				//pr_info("%s kad unlocked: Stop KAD!\n",__func__);
 				stop_kad_running(true,__func__);
 				if (init_done) {
 					alarm_cancel(&kad_repeat_rtc);
@@ -3098,7 +3096,7 @@ static void ntf_listener(char* event, int num_param, char* str_param) {
 static int __init fpf_init(void)
 {
 	int rc = 0;
-	pr_info("fpf - init\n");
+	//pr_info("fpf - init\n");
 
 	fpf_pwrdev = input_allocate_device();
 	if (!fpf_pwrdev) {
@@ -3137,7 +3135,7 @@ static int __init fpf_init(void)
 	if (rc)
 		pr_err("%s: Failed to register fpf_input_handler\n", __func__);
 	else
-		pr_info("%s: fpf - input handler registered\n",__func__);
+		//pr_info("%s: fpf - input handler registered\n",__func__);
 
 	// ts handler
 	ts_input_wq = create_workqueue("ts_iwq");
@@ -3173,7 +3171,7 @@ err_input_dev:
 //	input_free_device(fpf_pwrdev);
 
 err_alloc_dev:
-	pr_info("%s fpf done\n", __func__);
+	//pr_info("%s fpf done\n", __func__);
 
 	return 0;
 }
